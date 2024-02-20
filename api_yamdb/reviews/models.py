@@ -3,13 +3,12 @@ from django.template.defaultfilters import truncatewords, truncatechars
 from django.contrib.auth.models import AbstractUser
 
 
-WORDS_ON_TITLE = 3
 WORDS_ON_TEXT = 10
-CHARS_ON_USERNAME = 25
 
 
 class User(AbstractUser):
     """Класс для пользователя"""
+
     class RoleChoice(models.TextChoices):
         """Вспомогательный класс для определения роли пользователя."""
 
@@ -45,18 +44,23 @@ class User(AbstractUser):
                 name='unique_user'
             ),
         )
+
     def __str__(self):
-        return truncatechars(self.username, CHARS_ON_USERNAME)
+        chars_on_username = 25
+        return truncatechars(self.username, chars_on_username)
 
 
 class TextField(models.Model):
     """Класс для преобразования полей модели в строку"""
+
     def print_fields(self):
         return ' '.join([value for value in self.__dict__])
 
 
 class Titles(TextField):
     """Модель для произведений"""
+
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=256, verbose_name='Название')
     year = models.IntegerField(verbose_name='Год выпуска')
     rating = models.SmallIntegerField(
@@ -72,6 +76,7 @@ class Titles(TextField):
 
     class Meta:
         """Дополнительная информация о модели Titles"""
+
         verbose_name = 'произведение'
         verbose_name_plural = 'Произведение'
         default_related_name = 'titles'
@@ -95,11 +100,13 @@ class Categories(TextField):
 
     class Meta:
         """Дополнительная информация о модели Categories."""
+
         verbose_name = 'категория'
         verbose_name_plural = 'категории'
 
     def __str__(self) -> str:
         """Возвращает все поля сообщества."""
+
         return truncatewords(self.print_fields(), WORDS_ON_TEXT)
 
 
@@ -118,9 +125,11 @@ class Genre(TextField):
 
     class Meta:
         """Дополнительная информация о модели Genre."""
+
         verbose_name = 'жанр'
         verbose_name_plural = 'жанры'
 
     def __str__(self) -> str:
         """Возвращает все поля модели Genre."""
+
         return truncatewords(self.print_fields(), WORDS_ON_TEXT)
