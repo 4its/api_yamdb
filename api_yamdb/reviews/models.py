@@ -53,3 +53,26 @@ class Categories(TextField):
     def __str__(self) -> str:
         """Возвращает все поля сообщества."""
         return truncatewords(self.print_fields(), WORDS_ON_TEXT)
+
+
+class Genre(TextField):
+    """Модель для жанра."""
+
+    name = models.TextField(
+        max_length=256,
+        verbose_name='Имя жанра'
+    )
+    slug = models.SlugField(
+        max_length=50,
+        unique=True,
+        verbose_name='Слаг жанра'
+    )
+
+    class Meta:
+        """Дополнительная информация о модели Genre."""
+        verbose_name = 'жанр'
+        verbose_name_plural = 'жанры'
+
+    def __str__(self) -> str:
+        """Возвращает все поля модели Genre."""
+        return truncatewords(self.print_fields(), WORDS_ON_TEXT)
