@@ -21,6 +21,11 @@ class Titles(TextField):
         verbose_name='Год'
     )
     description = models.TextField(verbose_name='Описание')
+    category = models.ForeignKey(
+        'Categories',
+        on_delete=models.SET_NULL,
+    )
+    genre = models.ManyToManyField('Genre', on_delete=models.SET_NULL)
 
     class Meta:
         """Дополнительная информация о модели Titles"""
