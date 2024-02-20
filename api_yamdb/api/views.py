@@ -17,3 +17,17 @@ class CategoryViewSet(viewsets.ModelViewSet):
     """
 
     pass
+
+
+class GenresViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для работы с моделью Genre.
+
+    Доступные HTTP методы:
+
+    - GET;
+    - POST;
+    - DELETE.
+    """
+
+    pass
