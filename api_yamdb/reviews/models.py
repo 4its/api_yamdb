@@ -72,7 +72,7 @@ class Titles(TextField):
         'Categories',
         on_delete=models.SET_NULL,
     )
-    genre = models.ManyToManyField('Genre', on_delete=models.SET_NULL)
+    genre = models.ManyToManyField('Genre')
 
     class Meta:
         """Дополнительная информация о модели Titles"""
