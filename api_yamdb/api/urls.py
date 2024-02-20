@@ -8,5 +8,5 @@ router_v1.register(r'titles', TitleViewSet, basename='titles')
 
 
 urlpatterns = [
-    path('', include(router_v1.urls)),
+    path('v1/', include(router_v1.urls)),
 ]
