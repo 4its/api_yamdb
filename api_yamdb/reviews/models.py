@@ -71,6 +71,7 @@ class Titles(TextField):
     category = models.ForeignKey(
         'Categories',
         on_delete=models.SET_NULL,
+        null=True
     )
     genre = models.ManyToManyField('Genre')
 
