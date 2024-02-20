@@ -5,7 +5,31 @@ WORDS_ON_TITLE = 3
 WORDS_ON_TEXT = 10
 
 
-class Categories:
+class TextField(models.Model):
+    def print_fields(self):
+        return ' '.join([value for value in self.__dict__])
+
+
+class Titles(TextField):
+    name = models.CharField(max_length=256, verbose_name='Название')
+    year = models.IntegerField(verbose_name='Год выпуска')
+    rating = models.SmallIntegerField(
+        default=0,
+        max_length=1,
+        verbose_name='Год'
+    )
+    description = models.TextField(verbose_name='Описание')
+
+    class Meta:
+        verbose_name = 'произведение'
+        verbose_name_plural = 'Произведение'
+        default_related_name = 'titles'
+
+    def __str__(self):
+        return truncatewords(self.print_fields(), WORDS_ON_TEXT)
+
+
+class Categories(TextField):
     """Модель для категорий."""
 
     name = models.TextField(
