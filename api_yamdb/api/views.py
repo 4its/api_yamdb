@@ -31,3 +31,31 @@ class GenresViewSet(viewsets.ModelViewSet):
     """
 
     pass
+
+
+class ReviewsViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для работы с моделью Genre.
+
+    Доступные HTTP методы:
+
+    - GET;
+    - POST;
+    - DELETE.
+    """
+
+    pass
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для работы с моделью Genre.
+
+    Доступные HTTP методы:
+
+    - GET;
+    - POST;
+    - DELETE.
+    """
+
+    pass
