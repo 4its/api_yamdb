@@ -1,13 +1,13 @@
-from django.db import models
-from django.template.defaultfilters import truncatewords, truncatechars
 from django.contrib.auth.models import AbstractUser
+from django.db import models
+from django.template.defaultfilters import truncatechars, truncatewords
 
 
 WORDS_ON_TEXT = 10
 
 
 class User(AbstractUser):
-    """Класс для пользователя"""
+    """Класс для пользователя."""
 
     class RoleChoice(models.TextChoices):
         """Вспомогательный класс для определения роли пользователя."""
@@ -35,6 +35,7 @@ class User(AbstractUser):
     )
 
     class Meta:
+        """Дополнительная информация и ограничения для модели Role."""
         verbose_name = 'Пользователи'
         verbose_name_plural = 'пользователи'
         default_related_name = 'users'
@@ -46,16 +47,16 @@ class User(AbstractUser):
         )
 
     def __str__(self):
+        """Возвращает имя пользователя."""
         chars_on_username = 25
         return truncatechars(self.username, chars_on_username)
 
 
 class TextField(models.Model):
-    """Класс для преобразования полей модели в строку"""
+    """Класс для преобразования полей модели в строку."""
 
     def __str__(self) -> str:
-        """Возвращает все поля модели"""
-
+        """Возвращает все поля модели."""
         return truncatewords(
             ' '.join([value for value in self.__dict__]),
             WORDS_ON_TEXT
@@ -63,7 +64,7 @@ class TextField(models.Model):
 
 
 class Titles(TextField):
-    """Модель для произведений"""
+    """Модель для произведений."""
 
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=256, verbose_name='Название')
@@ -81,8 +82,7 @@ class Titles(TextField):
     genre = models.ManyToManyField('Genre')
 
     class Meta:
-        """Дополнительная информация о модели Titles"""
-
+        """Дополнительная информация о модели Titles."""
         verbose_name = 'Произведение'
         verbose_name_plural = 'произведение'
         default_related_name = 'titles'
@@ -103,7 +103,6 @@ class Categories(TextField):
 
     class Meta:
         """Дополнительная информация о модели Categories."""
-
         verbose_name = 'Категория'
         verbose_name_plural = 'категории'
 
@@ -123,7 +122,6 @@ class Genre(TextField):
 
     class Meta:
         """Дополнительная информация о модели Genre."""
-
         verbose_name = 'Жанр'
         verbose_name_plural = 'жанры'
 
@@ -142,13 +140,12 @@ class Reviews(TextField):
 
     class Meta:
         """Дополнительная информация о модели Reviews."""
-
         verbose_name = 'Отзыв'
         verbose_name_plural = 'отзывы'
 
 
 class Comment(TextField):
-    """Модель для коментариев."""
+    """Модель для комментариев."""
 
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     review = models.ForeignKey(
@@ -164,6 +161,5 @@ class Comment(TextField):
 
     class Meta:
         """Дополнительная информация о модели Comment."""
-
         verbose_name = 'Комментарий'
         verbose_name_plural = 'комментарий'
