@@ -151,7 +151,11 @@ class Comment(TextField):
     """Модель для коментариев."""
 
     author = models.ForeignKey(User, on_delete=models.CASCADE)
-    title = models.ForeignKey(Titles, on_delete=models.CASCADE)
+    review = models.ForeignKey(
+        Reviews,
+        on_delete=models.CASCADE,
+        related_name='comment'
+    )
     text = models.TextField(verbose_name='Текст коментария')
     pub_date = models.DateTimeField(
         verbose_name='Дата публикации',
