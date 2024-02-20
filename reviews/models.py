@@ -13,9 +13,9 @@ class TextField(models.Model):
 class Titles(TextField):
     name = models.CharField(max_length=256, verbose_name='Название')
     year = models.IntegerField(verbose_name='Год выпуска')
-    rating = models.IntegerField(
+    rating = models.SmallIntegerField(
         default=0,
-        max_length=5,
+        max_length=1,
         verbose_name='Год'
     )
     description = models.TextField(verbose_name='Описание')
