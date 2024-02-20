@@ -23,9 +23,9 @@ class Titles(TextField):
     description = models.TextField(verbose_name='Описание')
     category = models.ForeignKey(
         'Categories',
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
     )
-    genre = models.ManyToManyField('Genre', on_delete=models.CASCADE)
+    genre = models.ManyToManyField('Genre', on_delete=models.SET_NULL)
 
     class Meta:
         """Дополнительная информация о модели Titles"""
