@@ -1,8 +1,52 @@
 from django.db import models
-from django.template.defaultfilters import truncatewords
+from django.template.defaultfilters import truncatewords, truncatechars
+from django.contrib.auth.models import AbstractUser
+
 
 WORDS_ON_TITLE = 3
 WORDS_ON_TEXT = 10
+CHARS_ON_USERNAME = 25
+
+
+class User(AbstractUser):
+    """Класс для пользователя"""
+    class RoleChoice(models.TextChoices):
+        """Вспомогательный класс для определения роли пользователя."""
+
+        user = 'user', 'User'
+        moderator = 'moderator', 'Moderator'
+        admin = 'admin', 'Admin'
+
+    email = models.EmailField(
+        verbose_name='Эл.почта',
+        unique=True,
+        max_length=254,
+    )
+
+    bio = models.TextField(
+        verbose_name='О себе',
+        blank=True,
+        null=True,
+    )
+    role = models.CharField(
+        verbose_name='Роль',
+        choices=RoleChoice.choices,
+        default=RoleChoice.user,
+        max_length=9,
+    )
+
+    class Meta:
+        verbose_name = 'пользователи'
+        verbose_name_plural = 'Пользователи'
+        default_related_name = 'users'
+        constraints = (
+            models.UniqueConstraint(
+                fields=('username', 'email'),
+                name='unique_user'
+            ),
+        )
+    def __str__(self):
+        return truncatechars(self.username, CHARS_ON_USERNAME)
 
 
 class TextField(models.Model):
@@ -17,7 +61,6 @@ class Titles(TextField):
     year = models.IntegerField(verbose_name='Год выпуска')
     rating = models.SmallIntegerField(
         default=0,
-        max_length=1,
         verbose_name='Год'
     )
     description = models.TextField(verbose_name='Описание')
