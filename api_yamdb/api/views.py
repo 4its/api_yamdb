@@ -1,8 +1,22 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
+from rest_framework import filters
+
+from reviews.models import Titles
+
+from .serializers import TitlesSerializer
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    pass
+    queryset = Titles.objects.all()
+    serializer_class = TitlesSerializer
+    filter_backends = (
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter
+    )
+    filterset_fields = ('name', 'year')
+    search_fields = ('category__slug', 'genre__slug')
 
 
 class CategoryViewSet(viewsets.ModelViewSet):

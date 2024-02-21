@@ -66,12 +66,11 @@ class TextField(models.Model):
 class Titles(TextField):
     """Модель для произведений."""
 
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=256, verbose_name='Название')
     year = models.IntegerField(verbose_name='Год выпуска')
     rating = models.SmallIntegerField(
         default=0,
-        verbose_name='Год'
+        verbose_name='Рейтинг'
     )
     description = models.TextField(verbose_name='Описание')
     category = models.ForeignKey(
