@@ -2,7 +2,7 @@ from datetime import datetime
 
 from rest_framework import serializers
 
-from reviews.models import Categories, Genres, Titles
+from reviews.models import Categories, Genres, Reviews, Titles
 
 
 class TitlesSerializer(serializers.ModelSerializer):
@@ -69,3 +69,12 @@ class GenresSerializer(serializers.ModelSerializer):
         """Метакласс сериализатора Genres."""
         exclude = ('id',)
         model = Genres
+
+
+class ReviewsSerializer(serializers.ModelSerializer):
+    """Сериализатор модели Reviews."""
+
+    class Meta:
+        """Метакласс сериализатора Reviews."""
+        exclude = '__all__'
+        model = Reviews
