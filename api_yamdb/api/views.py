@@ -7,7 +7,7 @@ from .serializers import (CategoriesSerializer,
                           GenresSerializer,
                           ReviewsSerializer,
                           TitlesSerializer)
-from reviews.models import Categories, Genres, Titles
+from reviews.models import Categories, Genres, Titles, Reviews
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -89,4 +89,14 @@ class CommentViewSet(viewsets.ModelViewSet):
     - DELETE.
     """
 
-    pass
+    def get_reviews(self):
+        """Получает объект произведения."""
+        return get_object_or_404(Reviews, id=self.kwargs.get('review_id'))
+
+    def get_queryset(self):
+        """Возвращает все обзоры на произведение."""
+        return self.get_reviews().comment.all()
+
+    def perform_create(self, serializer):
+        """Создает обзор на произведение."""
+        serializer.save(author=self.request.user)
