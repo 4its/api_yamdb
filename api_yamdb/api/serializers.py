@@ -2,7 +2,7 @@ from datetime import datetime
 
 from rest_framework import serializers
 
-from reviews.models import Categories, Genre, Titles
+from reviews.models import Categories, Genres, Titles
 
 
 class TitlesSerializer(serializers.ModelSerializer):
@@ -11,7 +11,7 @@ class TitlesSerializer(serializers.ModelSerializer):
         slug_field='slug'
     )
     genre = serializers.SlugRelatedField(
-        queryset=Genre.objects.all(),
+        queryset=Genres.objects.all(),
         many=True,
         slug_field='slug'
     )
@@ -44,7 +44,7 @@ class TitlesSerializer(serializers.ModelSerializer):
                 f'Category {category} does not exist'
             )
         genre_title = validated_data.pop('genre')
-        all_genre = Genre.objects.all()
+        all_genre = Genres.objects.all()
         if not all(genre in all_genre for genre in genre_title):
             raise serializers.ValidationError(
                 f'There is no category'
