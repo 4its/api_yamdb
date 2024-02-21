@@ -8,6 +8,30 @@ USER_FIELDS_VALIDATOR = (
 )
 
 
+class SignupSerializer(serializers.ModelSerializer):
+    """Сериализатор для регистрации и получения confirmation_code."""
+
+    class Meta:
+        model = User
+        fields = ('username', 'email',)
+
+    def validate_username(self, username):
+        """Запрет использования имени 'me'."""
+        if username.lower() == 'me':
+            raise serializers.ValidationError("Name 'me' reserved by system")
+
+
+class TokenSerializer(serializers.ModelSerializer):
+    """Сериализатор для обработки запроса на получение токена с помощью
+        имени пользователя и confirmation_code."""
+    username = serializers.CharField()
+    confirmation_code = serializers.CharField()
+
+    class Meta:
+        model = User
+        fields = ('username', 'confirmation_code')
+
+
 class UserSerializer(serializers.ModelSerializer):
     """Класс сериализатор для пользователей."""
 
@@ -32,7 +56,7 @@ class UserSerializer(serializers.ModelSerializer):
                 queryset=User.objects.all(),
                 fields=('username', 'email'),
                 message='User already exists',
-            )
+            ),
         )
 
     def validate_username(self, username):
@@ -40,3 +64,6 @@ class UserSerializer(serializers.ModelSerializer):
         if username.lower() == 'me':
             raise serializers.ValidationError("Name 'me' reserved by system")
         return username
+
+    def create(self, validated_data):
+        return User.objects.create(**validated_data)
