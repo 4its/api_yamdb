@@ -49,7 +49,8 @@ class TitlesSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 f'There is no category'
             )
-        title = Titles.objects.create(**validated_data)
+        title = Titles.objects.create(**validated_data, category=category)
+        title.genre.set(genre_title)
         return title
 
 
