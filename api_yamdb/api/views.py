@@ -7,7 +7,7 @@ from .serializers import (CategoriesSerializer,
                           GenresSerializer,
                           ReviewsSerializer,
                           TitlesSerializer)
-from reviews.models import Categories, Genres, Titles
+from reviews.models import Categories, Genres, Titles, Reviews
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -80,7 +80,7 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     """
-    ViewSet для работы с моделью Genre.
+    ViewSet для работы с моделью Comment.
 
     Доступные HTTP методы:
 
@@ -89,4 +89,14 @@ class CommentViewSet(viewsets.ModelViewSet):
     - DELETE.
     """
 
-    pass
+    def get_reviews(self):
+        """Получает объект ревью"""
+        return get_object_or_404(Reviews, id=self.kwargs.get('review_id'))
+
+    def get_queryset(self):
+        """Возвращает все комментарии на ревью."""
+        return self.get_reviews().comment.all()
+
+    def perform_create(self, serializer):
+        """Создает комментарий на ревью."""
+        serializer.save(author=self.request.user)

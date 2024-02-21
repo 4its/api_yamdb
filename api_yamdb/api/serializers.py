@@ -80,6 +80,14 @@ class ReviewsSerializer(serializers.ModelSerializer):
         exclude = ('author', 'title',)
         model = Reviews
 
+class CommentsSerializer(serializers.ModelSerializer):
+    """Сериализатор модели Comments."""
+
+    class Meta:
+        """Метакласс сериализатора Comments."""
+        model = Titles
+        exclude = ('author',)
+        
     def score_validate(self, validated_data):
         """Проверка оценки произведения."""
         minimum_score = 1
