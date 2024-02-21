@@ -77,5 +77,5 @@ class ReviewsSerializer(serializers.ModelSerializer):
 
     class Meta:
         """Метакласс сериализатора Reviews."""
-        exclude = '__all__'
+        exclude = ('author', 'title',)
         model = Reviews
