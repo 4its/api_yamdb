@@ -13,7 +13,7 @@ class CategoriesSerializer(serializers.ModelSerializer):
 
 
 class GenresSerializer(serializers.ModelSerializer):
-    """Сериализатор модели Genre."""
+    """Сериализатор модели Genres."""
 
     class Meta:
         """Метакласс сериализатора Genres."""
