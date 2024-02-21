@@ -6,6 +6,9 @@ from reviews.models import Titles
 
 from .serializers import TitlesSerializer
 
+from .serializers import CategoriesSerializer, GenresSerializer
+from reviews.models import Categories, Genres
+
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Titles.objects.all()
@@ -19,7 +22,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     search_fields = ('category__slug', 'genre__slug')
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoriesViewSet(viewsets.ModelViewSet):
     """
     ViewSet для работы с моделью Category.
 
@@ -30,7 +33,8 @@ class CategoryViewSet(viewsets.ModelViewSet):
     - DELETE.
     """
 
-    pass
+    queryset = Categories.objects.all()
+    serializer_class = CategoriesSerializer
 
 
 class GenresViewSet(viewsets.ModelViewSet):
@@ -44,7 +48,8 @@ class GenresViewSet(viewsets.ModelViewSet):
     - DELETE.
     """
 
-    pass
+    queryset = Genres.objects.all()
+    serializer_class = GenresSerializer
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):

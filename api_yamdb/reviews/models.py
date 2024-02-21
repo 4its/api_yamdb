@@ -78,7 +78,7 @@ class Titles(TextField):
         on_delete=models.SET_NULL,
         null=True
     )
-    genre = models.ManyToManyField('Genre')
+    genre = models.ManyToManyField('Genres')
 
     class Meta:
         """Дополнительная информация о модели Titles."""
@@ -106,7 +106,7 @@ class Categories(TextField):
         verbose_name_plural = 'категории'
 
 
-class Genre(TextField):
+class Genres(TextField):
     """Модель для жанра."""
 
     name = models.TextField(
@@ -120,7 +120,7 @@ class Genre(TextField):
     )
 
     class Meta:
-        """Дополнительная информация о модели Genre."""
+        """Дополнительная информация о модели Genres."""
         verbose_name = 'Жанр'
         verbose_name_plural = 'жанры'
 
@@ -143,7 +143,7 @@ class Reviews(TextField):
         verbose_name_plural = 'отзывы'
 
 
-class Comment(TextField):
+class Comments(TextField):
     """Модель для комментариев."""
 
     author = models.ForeignKey(User, on_delete=models.CASCADE)

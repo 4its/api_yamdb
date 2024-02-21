@@ -2,7 +2,7 @@ from datetime import datetime
 
 from rest_framework import serializers
 
-from reviews.models import Titles, Categories, Genre
+from reviews.models import Categories, Genre, Titles
 
 
 class TitlesSerializer(serializers.ModelSerializer):
@@ -51,3 +51,21 @@ class TitlesSerializer(serializers.ModelSerializer):
             )
         title = Titles.objects.create(**validated_data)
         return title
+
+
+class CategoriesSerializer(serializers.ModelSerializer):
+    """Сериализатор модели Categories."""
+
+    class Meta:
+        """Метакласс сериализатора Categories."""
+        exclude = ('id',)
+        model = Categories
+
+
+class GenresSerializer(serializers.ModelSerializer):
+    """Сериализатор модели Genres."""
+
+    class Meta:
+        """Метакласс сериализатора Genres."""
+        exclude = ('id',)
+        model = Genres
