@@ -82,9 +82,9 @@ class ReviewsSerializer(serializers.ModelSerializer):
 
 
 class CommentsSerializer(serializers.ModelSerializer):
-    """Сериализатор модели Reviews."""
+    """Сериализатор модели Comments."""
 
     class Meta:
-        """Метакласс сериализатора Reviews."""
+        """Метакласс сериализатора Comments."""
         model = Titles
         exclude = ('author',)

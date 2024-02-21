@@ -80,7 +80,7 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     """
-    ViewSet для работы с моделью Genre.
+    ViewSet для работы с моделью Comment.
 
     Доступные HTTP методы:
 
@@ -90,13 +90,13 @@ class CommentViewSet(viewsets.ModelViewSet):
     """
 
     def get_reviews(self):
-        """Получает объект произведения."""
+        """Получает объект ревью"""
         return get_object_or_404(Reviews, id=self.kwargs.get('review_id'))
 
     def get_queryset(self):
-        """Возвращает все обзоры на произведение."""
+        """Возвращает все комментарии на ревью."""
         return self.get_reviews().comment.all()
 
     def perform_create(self, serializer):
-        """Создает обзор на произведение."""
+        """Создает комментарий на ревью."""
         serializer.save(author=self.request.user)
