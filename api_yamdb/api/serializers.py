@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from reviews.models import Categories, Genres
+from reviews.models import Categories, Genres, Reviews
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -19,3 +19,12 @@ class GenresSerializer(serializers.ModelSerializer):
         """Метакласс сериализатора Genres."""
         exclude = ('id',)
         model = Genres
+
+
+class ReviewsSerializer(serializers.ModelSerializer):
+    """Сериализатор модели Reviews."""
+
+    class Meta:
+        """Метакласс сериализатора Reviews."""
+        exclude = '__all__'
+        model = Reviews

@@ -130,7 +130,12 @@ class Reviews(TextField):
     """Модель для отзывов."""
 
     author = models.ForeignKey(User, on_delete=models.CASCADE)
-    title = models.ForeignKey(Titles, on_delete=models.CASCADE)
+    title = models.ForeignKey(
+        Titles,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Обзор'
+    )
     text = models.TextField(verbose_name='Текст отзыва')
     score = models.SmallIntegerField(verbose_name='(Оценка')
     pub_date = models.DateTimeField(
