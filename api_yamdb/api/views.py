@@ -1,11 +1,14 @@
 from rest_framework import viewsets
 
+from .serializers import CategoriesSerializer
+from reviews.models import Categories
+
 
 class TitleViewSet(viewsets.ModelViewSet):
     pass
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoriesViewSet(viewsets.ModelViewSet):
     """
     ViewSet для работы с моделью Category.
 
@@ -16,7 +19,8 @@ class CategoryViewSet(viewsets.ModelViewSet):
     - DELETE.
     """
 
-    pass
+    queryset = Categories.objects.all()
+    serializer_class = CategoriesSerializer
 
 
 class GenresViewSet(viewsets.ModelViewSet):
