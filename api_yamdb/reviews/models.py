@@ -1,6 +1,6 @@
-from django.db import models
-from django.template.defaultfilters import truncatewords, truncatechars
 from django.contrib.auth.models import AbstractUser
+from django.db import models
+from django.template.defaultfilters import truncatechars, truncatewords
 
 
 WORDS_ON_TEXT = 10
@@ -37,8 +37,9 @@ class User(AbstractUser):
     )
 
     class Meta:
-        verbose_name = 'пользователи'
-        verbose_name_plural = 'Пользователи'
+        """Дополнительная информация и ограничения для модели Role."""
+        verbose_name = 'Пользователи'
+        verbose_name_plural = 'пользователи'
         default_related_name = 'users'
         constraints = (
             models.UniqueConstraint(
@@ -48,26 +49,30 @@ class User(AbstractUser):
         )
 
     def __str__(self):
+        """Возвращает имя пользователя."""
         chars_on_username = 25
         return truncatechars(self.username, chars_on_username)
 
 
 class TextField(models.Model):
-    """Класс для преобразования полей модели в строку"""
+    """Класс для преобразования полей модели в строку."""
 
-    def print_fields(self):
-        return ' '.join([value for value in self.__dict__])
+    def __str__(self) -> str:
+        """Возвращает все поля модели."""
+        return truncatewords(
+            ' '.join([value for value in self.__dict__]),
+            WORDS_ON_TEXT
+        )
 
 
 class Titles(TextField):
-    """Модель для произведений"""
+    """Модель для произведений."""
 
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=256, verbose_name='Название')
     year = models.IntegerField(verbose_name='Год выпуска')
     rating = models.SmallIntegerField(
         default=0,
-        verbose_name='Год'
+        verbose_name='Рейтинг'
     )
     description = models.TextField(verbose_name='Описание')
     category = models.ForeignKey(
@@ -75,17 +80,13 @@ class Titles(TextField):
         on_delete=models.SET_NULL,
         null=True
     )
-    genre = models.ManyToManyField('Genre')
+    genre = models.ManyToManyField('Genres')
 
     class Meta:
-        """Дополнительная информация о модели Titles"""
-
-        verbose_name = 'произведение'
-        verbose_name_plural = 'Произведение'
+        """Дополнительная информация о модели Titles."""
+        verbose_name = 'Произведение'
+        verbose_name_plural = 'произведение'
         default_related_name = 'titles'
-
-    def __str__(self):
-        return truncatewords(self.print_fields(), WORDS_ON_TEXT)
 
 
 class Categories(TextField):
@@ -103,17 +104,11 @@ class Categories(TextField):
 
     class Meta:
         """Дополнительная информация о модели Categories."""
-
-        verbose_name = 'категория'
+        verbose_name = 'Категория'
         verbose_name_plural = 'категории'
 
-    def __str__(self) -> str:
-        """Возвращает все поля сообщества."""
 
-        return truncatewords(self.print_fields(), WORDS_ON_TEXT)
-
-
-class Genre(TextField):
+class Genres(TextField):
     """Модель для жанра."""
 
     name = models.TextField(
@@ -127,12 +122,50 @@ class Genre(TextField):
     )
 
     class Meta:
-        """Дополнительная информация о модели Genre."""
-
-        verbose_name = 'жанр'
+        """Дополнительная информация о модели Genres."""
+        verbose_name = 'Жанр'
         verbose_name_plural = 'жанры'
 
-    def __str__(self) -> str:
-        """Возвращает все поля модели Genre."""
 
-        return truncatewords(self.print_fields(), WORDS_ON_TEXT)
+class Reviews(TextField):
+    """Модель для отзывов."""
+
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.ForeignKey(
+        Titles,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Обзор'
+    )
+    text = models.TextField(verbose_name='Текст отзыва')
+    score = models.SmallIntegerField(verbose_name='(Оценка')
+    pub_date = models.DateTimeField(
+        verbose_name='Дата публикации',
+        auto_now_add=True
+    )
+
+    class Meta:
+        """Дополнительная информация о модели Reviews."""
+        verbose_name = 'Отзыв'
+        verbose_name_plural = 'отзывы'
+
+
+class Comments(TextField):
+    """Модель для комментариев."""
+
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    review = models.ForeignKey(
+        Reviews,
+        on_delete=models.CASCADE,
+        related_name='comment'
+    )
+    text = models.TextField(verbose_name='Текст коментария')
+    pub_date = models.DateTimeField(
+        verbose_name='Дата публикации',
+        auto_now_add=True
+    )
+
+    class Meta:
+        """Дополнительная информация о модели Comment."""
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'комментарий'
