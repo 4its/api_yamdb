@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 
-from .serializers import CategoriesSerializer
-from reviews.models import Categories
+from .serializers import CategoriesSerializer, GenresSerializer
+from reviews.models import Categories, Genres
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -34,7 +34,8 @@ class GenresViewSet(viewsets.ModelViewSet):
     - DELETE.
     """
 
-    pass
+    queryset = Genres.objects.all()
+    serializer_class = GenresSerializer
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
