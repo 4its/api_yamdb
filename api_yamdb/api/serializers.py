@@ -80,7 +80,6 @@ class ReviewsSerializer(serializers.ModelSerializer):
         exclude = ('author', 'title',)
         model = Reviews
 
-
 class CommentsSerializer(serializers.ModelSerializer):
     """Сериализатор модели Comments."""
 
@@ -88,3 +87,16 @@ class CommentsSerializer(serializers.ModelSerializer):
         """Метакласс сериализатора Comments."""
         model = Titles
         exclude = ('author',)
+        
+    def score_validate(self, validated_data):
+        """Проверка оценки произведения."""
+        minimum_score = 1
+        maximum_score = 10
+
+        score = validated_data.pop('score')
+        if not minimum_score <= score <= maximum_score:
+            raise serializers.ValidationError(
+                f'Величина оценки вне диапазона '
+                f'[{minimum_score}...{maximum_score}]!'
+            )
+        return score
