@@ -72,61 +72,12 @@ class UserSerializer(serializers.ModelSerializer):
         return User.objects.create(**validated_data)
 
 
-class TitlesSerializer(serializers.ModelSerializer):
-    category = serializers.SlugRelatedField(
-        queryset=Categories.objects.all(),
-        slug_field='slug'
-    )
-    genre = serializers.SlugRelatedField(
-        queryset=Genres.objects.all(),
-        many=True,
-        slug_field='slug'
-    )
-
-    class Meta:
-        model = Titles
-        fields = ('name', 'year', 'rating', 'description', 'genre', 'category')
-
-    def validate_year(self, year):
-        """Проверка года произведения"""
-        if year > datetime.now().year:
-            raise serializers.ValidationError(
-                'the year of the work cannot be longer than the current one'
-            )
-        return year
-
-    def validate_rating(self, rating):
-        """Проверка рейтинга произведения"""
-        max_rating = 5
-        if rating > max_rating:
-            raise serializers.ValidationError(
-                'The rating cannot be higher than 5'
-            )
-        return rating
-
-    def create(self, validated_data):
-        category = validated_data.pop('category')
-        if category not in Categories.objects.all():
-            raise serializers.ValidationError(
-                f'Category {category} does not exist'
-            )
-        genre_title = validated_data.pop('genre')
-        all_genre = Genres.objects.all()
-        if not all(genre in all_genre for genre in genre_title):
-            raise serializers.ValidationError(
-                f'There is no category'
-            )
-        title = Titles.objects.create(**validated_data, category=category)
-        title.genre.set(genre_title)
-        return title
-
-
 class CategoriesSerializer(serializers.ModelSerializer):
     """Сериализатор модели Categories."""
 
     class Meta:
         """Метакласс сериализатора Categories."""
-        exclude = ('id',)
+        fields = ('name', 'slug',)
         model = Categories
 
 
@@ -135,8 +86,52 @@ class GenresSerializer(serializers.ModelSerializer):
 
     class Meta:
         """Метакласс сериализатора Genres."""
-        exclude = ('id',)
+        fields = ('name', 'slug',)
         model = Genres
+
+
+class TitlesSerializer(serializers.ModelSerializer):
+    genre = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Genres.objects.all(),
+        many=True
+    )
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Categories.objects.all()
+    )
+
+    class Meta:
+        model = Titles
+        fields = ('id', 'name', 'year', 'rating',
+                  'description', 'genre', 'category')
+
+    def to_representation(self, instance):
+        """Представление данных модели Titles при GET запросе."""
+        representation = super().to_representation(instance)
+        representation['genre'] = GenresSerializer(
+            instance.genre, many=True).data
+        representation['category'] = CategoriesSerializer(
+            instance.category).data
+        return representation
+
+    def create(self, validated_data):
+        """Создает экземпляр объекта Title."""
+        genres_data = validated_data.pop('genre')
+        category_data = validated_data.pop('category')
+        title = Titles.objects.create(
+            category=category_data, **validated_data)
+        title.genre.set(genres_data)
+        title.save()
+        return title
+
+    def validate_year(self, year):
+        """Проверка года произведения"""
+        if year > datetime.now().year:
+            raise serializers.ValidationError(
+                f'Год выпуска произведения больше {year}!'
+            )
+        return year
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
@@ -147,14 +142,6 @@ class ReviewsSerializer(serializers.ModelSerializer):
         exclude = ('author', 'title',)
         model = Reviews
 
-class CommentsSerializer(serializers.ModelSerializer):
-    """Сериализатор модели Comments."""
-
-    class Meta:
-        """Метакласс сериализатора Comments."""
-        model = Titles
-        exclude = ('author',)
-        
     def score_validate(self, validated_data):
         """Проверка оценки произведения."""
         minimum_score = 1
@@ -167,3 +154,12 @@ class CommentsSerializer(serializers.ModelSerializer):
                 f'[{minimum_score}...{maximum_score}]!'
             )
         return score
+
+
+class CommentsSerializer(serializers.ModelSerializer):
+    """Сериализатор модели Comments."""
+
+    class Meta:
+        """Метакласс сериализатора Comments."""
+        model = Titles
+        exclude = ('author',)
