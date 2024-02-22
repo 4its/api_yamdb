@@ -1,13 +1,71 @@
+from django.core.mail import send_mail
+from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
 from django_filters.rest_framework import DjangoFilterBackend
 
-from rest_framework import filters, viewsets
-from rest_framework.generics import get_object_or_404
+from rest_framework import filters, viewsets, status
+from rest_framework.generics import get_object_or_404, CreateAPIView
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .serializers import (CategoriesSerializer,
                           GenresSerializer,
                           ReviewsSerializer,
-                          TitlesSerializer)
+                          TitlesSerializer,
+                          UserSerializer,
+                          SignupSerializer,
+                          TokenSerializer,
+                         )
 from reviews.models import Categories, Genres, Titles, Reviews
+
+User = get_user_model()
+
+
+class UserSignupView(CreateAPIView):
+    """Класс для регистрации и получения confirmation_code."""
+
+    def post(self, request):
+        serializer = SignupSerializer(data=request.data)
+
+        username = request.data.get('username')
+        email = request.data.get('email')
+        user = User.objects.filter(username=username, email=email).exists()
+
+        if serializer.is_valid() or user:
+            user, created = User.objects.get_or_create(
+                username=username,
+                email=email,
+            )
+            confirmation_code = default_token_generator.make_token(user)
+            send_mail(
+                'Confirmation Code for Yamdb',
+                f'Your confirmation code is: {confirmation_code}',
+                'registration@yamdb.com',
+                [email],
+                fail_silently=True,
+            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TokenView(CreateAPIView):
+    """Класс для получения токена по средствам
+    предоставления username и confirmation_code."""
+
+    def post(self, request):
+        serializer = TokenSerializer(data=request.data)
+        user = get_object_or_404(User, username=request.data.get('username'))
+        check_token = default_token_generator.check_token(
+            user,
+            request.data.get('confirmation_code')
+        )
+        if serializer.is_valid() and check_token:
+            token = RefreshToken.for_user(user)
+            return Response(
+                dict(token=str(token.access_token)),
+                status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class TitleViewSet(viewsets.ModelViewSet):

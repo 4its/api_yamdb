@@ -7,7 +7,9 @@ WORDS_ON_TEXT = 10
 
 
 class User(AbstractUser):
-    """Класс для пользователя."""
+    """Класс для пользователя"""
+    USERNAME_LENGTH = AbstractUser._meta.get_field('username').max_length
+    EMAIL_FIELD_LENGTH = 254
 
     class RoleChoice(models.TextChoices):
         """Вспомогательный класс для определения роли пользователя."""
@@ -19,7 +21,7 @@ class User(AbstractUser):
     email = models.EmailField(
         verbose_name='Эл.почта',
         unique=True,
-        max_length=254,
+        max_length=EMAIL_FIELD_LENGTH,
     )
 
     bio = models.TextField(
