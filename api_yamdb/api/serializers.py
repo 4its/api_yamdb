@@ -91,6 +91,7 @@ class GenresSerializer(serializers.ModelSerializer):
 
 
 class TitlesSerializer(serializers.ModelSerializer):
+    """Сериализатор модели Titles."""
     genre = serializers.SlugRelatedField(
         slug_field='slug',
         queryset=Genres.objects.all(),
@@ -126,7 +127,7 @@ class TitlesSerializer(serializers.ModelSerializer):
         return title
 
     def validate_year(self, year):
-        """Проверка года произведения"""
+        """Проверка года произведения."""
         if year > datetime.now().year:
             raise serializers.ValidationError(
                 f'Год выпуска произведения больше {year}!'

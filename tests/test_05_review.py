@@ -115,7 +115,7 @@ class Test05ReviewAPI:
         )
 
         try:
-            from api_yamdb.reviews import Review, Title
+            from reviews.models import Review, Title
         except Exception as e:
             assert False, (
                 'Не удалось импортировать модели из приложения reviews. '

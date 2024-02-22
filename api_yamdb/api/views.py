@@ -7,13 +7,13 @@ from rest_framework import filters, viewsets, status
 from rest_framework.generics import get_object_or_404, CreateAPIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.pagination import PageNumberPagination
 
 from .serializers import (
     CategoriesSerializer,
     GenresSerializer,
     ReviewsSerializer,
     TitlesSerializer,
-    UserSerializer,
     SignupSerializer,
     TokenSerializer,
 )
@@ -50,8 +50,10 @@ class UserSignupView(CreateAPIView):
 
 
 class TokenView(CreateAPIView):
-    """Класс для получения токена по средствам
-    предоставления username и confirmation_code."""
+    """
+    Класс для получения токена по средствам
+    предоставления username и confirmation_code.
+    """
 
     def post(self, request):
         serializer = TokenSerializer(data=request.data)
@@ -72,13 +74,12 @@ class TokenView(CreateAPIView):
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Titles.objects.all()
     serializer_class = TitlesSerializer
+    pagination_class = PageNumberPagination
     filter_backends = (
         DjangoFilterBackend,
-        filters.SearchFilter,
         filters.OrderingFilter
     )
-    filterset_fields = ('name', 'year')
-    search_fields = ('category__slug', 'genre__slug')
+    filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
@@ -94,6 +95,12 @@ class CategoriesViewSet(viewsets.ModelViewSet):
 
     queryset = Categories.objects.all()
     serializer_class = CategoriesSerializer
+    pagination_class = PageNumberPagination
+    filter_backends = (
+        DjangoFilterBackend,
+        filters.SearchFilter,
+    )
+    search_fields = ('name',)
 
 
 class GenresViewSet(viewsets.ModelViewSet):
@@ -109,6 +116,12 @@ class GenresViewSet(viewsets.ModelViewSet):
 
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
+    pagination_class = PageNumberPagination
+    filter_backends = (
+        DjangoFilterBackend,
+        filters.SearchFilter,
+    )
+    search_fields = ('name',)
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
