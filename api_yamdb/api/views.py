@@ -8,14 +8,15 @@ from rest_framework.generics import get_object_or_404, CreateAPIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import (CategoriesSerializer,
-                          GenresSerializer,
-                          ReviewsSerializer,
-                          TitlesSerializer,
-                          UserSerializer,
-                          SignupSerializer,
-                          TokenSerializer,
-                         )
+from .serializers import (
+    CategoriesSerializer,
+    GenresSerializer,
+    ReviewsSerializer,
+    TitlesSerializer,
+    UserSerializer,
+    SignupSerializer,
+    TokenSerializer,
+)
 from reviews.models import Categories, Genres, Titles, Reviews
 
 User = get_user_model()
