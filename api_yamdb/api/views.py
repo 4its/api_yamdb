@@ -41,11 +41,9 @@ class UserSignupView(CreateAPIView):
                 'Confirmation Code for Yamdb',
                 f'Your confirmation code is: {confirmation_code}',
                 'registration@yamdb.com',
-                recipient_list=(email,),
+                [email],
                 fail_silently=True,
             )
-
-            print(f'{request.data = }')
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
