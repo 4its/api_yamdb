@@ -51,7 +51,7 @@ class UserSignupView(generics.CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class TokenView(CreateAPIView):
+class TokenView(generics.CreateAPIView):
     """
     Класс для получения токена по средствам
     предоставления username и confirmation_code.
