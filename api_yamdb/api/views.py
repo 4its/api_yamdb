@@ -3,8 +3,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django_filters.rest_framework import DjangoFilterBackend
 
-from rest_framework import filters, viewsets, status, permissions
-from rest_framework.generics import get_object_or_404, CreateAPIView
+from rest_framework import filters, viewsets, status, permissions, generics
+from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.pagination import PageNumberPagination
@@ -15,6 +15,7 @@ from .serializers import (
     ReviewsSerializer,
     TitlesSerializer,
     UserSerializer,
+    MeSerializer,
     SignupSerializer,
     TokenSerializer,
 )
@@ -23,30 +24,34 @@ from reviews.models import Categories, Genres, Titles, Reviews
 User = get_user_model()
 
 
-class UserSignupView(CreateAPIView):
+class UserSignupView(generics.CreateAPIView):
     """Класс для регистрации и получения confirmation_code."""
 
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user, created = User.objects.get_or_create(
-            username=serializer.validated_data.get('username'),
-            email=serializer.validated_data.get('email'),
-        )
-        confirmation_code = default_token_generator.make_token(user)
-        send_mail(
-            'Confirmation Code for Yamdb',
-            f'Your confirmation code is: {confirmation_code}',
-            'registration@yamdb.com',
-            [user.email],
-            fail_silently=True,
-        )
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        username = request.data.get('username')
+        email = request.data.get('email')
+        user = User.objects.filter(username=username, email=email).exists()
+        if serializer.is_valid() or user:
+            user, created = User.objects.get_or_create(
+                username=username,
+                email=email,
+            )
+            confirmation_code = default_token_generator.make_token(user)
+            send_mail(
+                'Confirmation Code for Yamdb',
+                f'Your confirmation code is: {confirmation_code}',
+                'registration@yamdb.com',
+                [email],
+                fail_silently=True,
+            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class TokenView(CreateAPIView):
+class TokenView(generics.CreateAPIView):
     """Класс для получения токена по средствам
     предоставления username и confirmation_code."""
 
@@ -68,6 +73,28 @@ class TokenView(CreateAPIView):
             dict(confirmation_code='invalid confirmation_code'),
             status=status.HTTP_400_BAD_REQUEST
         )
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    """Вьюсет для работы с пользователями"""
+    queryset = User.objects.all()
+    filter_backends = (
+        filters.SearchFilter,
+    )
+    search_fields = ('username',)
+    lookup_field = 'username'
+    serializer_class = UserSerializer
+    pagination_class = PageNumberPagination
+    ordering = ('id',)
+
+
+class UserMeView(generics.RetrieveAPIView):
+    """Вьюсет для работы с endpoint'ом users/me."""
+
+    serializer_class = MeSerializer
+
+    def get_object(self):
+        return self.request.user
 
 
 class TitleViewSet(viewsets.ModelViewSet):
