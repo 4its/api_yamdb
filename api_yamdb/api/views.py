@@ -19,6 +19,7 @@ from .serializers import (
     MeSerializer,
     SignupSerializer,
     TokenSerializer,
+    CommentsSerializer
 )
 from reviews.models import Categories, Genres, Titles, Reviews
 
@@ -178,7 +179,10 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """Создает обзор на произведение."""
-        serializer.save(author=self.request.user, title=self.get_title())
+        serializer.save(
+            author=self.request.user,
+            title_id=self.get_title().id
+        )
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -191,6 +195,8 @@ class CommentViewSet(viewsets.ModelViewSet):
     - POST;
     - DELETE.
     """
+
+    serializer_class = CommentsSerializer
 
     def get_reviews(self):
         """Получает объект ревью"""

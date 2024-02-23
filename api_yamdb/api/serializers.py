@@ -2,7 +2,7 @@ from datetime import datetime
 
 from rest_framework import serializers, validators
 
-from reviews.models import Categories, Genres, Reviews, Titles, User
+from reviews.models import Categories, Genres, Reviews, Titles, User, Comments
 
 USER_FIELDS_VALIDATOR = (
     validators.UniqueValidator(
@@ -171,12 +171,10 @@ class ReviewsSerializer(serializers.ModelSerializer):
         return score
 
 
-
-
 class CommentsSerializer(serializers.ModelSerializer):
     """Сериализатор модели Comments."""
 
     class Meta:
         """Метакласс сериализатора Comments."""
-        model = Titles
-        exclude = ('author',)
+        model = Comments
+        fields = ('id', 'text', 'author', 'pub_date')
