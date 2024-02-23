@@ -29,7 +29,6 @@ class SignupSerializer(serializers.ModelSerializer):
 class TokenSerializer(serializers.ModelSerializer):
     """Сериализатор для обработки запроса на получение токена с помощью
         имени пользователя и confirmation_code."""
-    username = serializers.CharField()
     confirmation_code = serializers.CharField()
 
     class Meta:
@@ -40,16 +39,17 @@ class TokenSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     """Класс сериализатор для пользователей."""
 
-    username = serializers.CharField(
-        required=True,
+    username = serializers.RegexField(
+        regex=r'^[\w.@+-]+\Z',
         max_length=User.USERNAME_LENGTH,
+        required=True,
         validators=USER_FIELDS_VALIDATOR
     )
     email = serializers.EmailField(
         required=True,
         max_length=User.EMAIL_FIELD_LENGTH,
         validators=USER_FIELDS_VALIDATOR
-        )
+    )
 
     class Meta:
         model = User
@@ -72,6 +72,17 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return User.objects.create(**validated_data)
+
+
+class MeSerializer(serializers.ModelSerializer):
+    """Сериализатор эндпойнта me."""
+
+    class Meta:
+        model = User
+        fields = (
+            'username', 'email', 'first_name', 'last_name', 'bio', 'role',
+        )
+        read_only_fields = ('id', 'role')
 
 
 class TitlesSerializer(serializers.ModelSerializer):
@@ -157,6 +168,7 @@ class ReviewsSerializer(serializers.ModelSerializer):
         exclude = ('author', 'title',)
         model = Reviews
 
+
 class CommentsSerializer(serializers.ModelSerializer):
     """Сериализатор модели Comments."""
 
@@ -164,7 +176,7 @@ class CommentsSerializer(serializers.ModelSerializer):
         """Метакласс сериализатора Comments."""
         model = Titles
         exclude = ('author',)
-        
+
     def score_validate(self, validated_data):
         """Проверка оценки произведения."""
         minimum_score = 1
