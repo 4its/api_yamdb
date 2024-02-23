@@ -20,8 +20,10 @@ class SignupSerializer(serializers.ModelSerializer):
 
     def validate_username(self, username):
         """Запрет использования имени 'me'."""
+
         if username.lower() == 'me':
             raise serializers.ValidationError("Name 'me' reserved by system")
+        return username
 
 
 class TokenSerializer(serializers.ModelSerializer):
