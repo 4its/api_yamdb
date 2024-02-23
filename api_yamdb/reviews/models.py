@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.core.validators import RegexValidator
 from django.template.defaultfilters import truncatechars, truncatewords
 
 
@@ -17,6 +18,15 @@ class User(AbstractUser):
         user = 'user', 'User'
         moderator = 'moderator', 'Moderator'
         admin = 'admin', 'Admin'
+
+    username = models.CharField(
+        max_length=USERNAME_LENGTH,
+        unique=True,
+        validators=(RegexValidator(
+            r'^[\w.@+-]+\Z',
+            message='Имя пользователя содержит недопустимые символы'
+        ),)
+    )
 
     email = models.EmailField(
         verbose_name='Эл.почта',
@@ -37,10 +47,11 @@ class User(AbstractUser):
     )
 
     class Meta:
-        """Дополнительная информация и ограничения для модели Role."""
+        """Дополнительная информация и ограничения для модели User."""
         verbose_name = 'Пользователи'
         verbose_name_plural = 'пользователи'
         default_related_name = 'users'
+        ordering = ('id',)
         constraints = (
             models.UniqueConstraint(
                 fields=('username', 'email'),
