@@ -128,9 +128,10 @@ class TitlesSerializer(serializers.ModelSerializer):
 
     def validate_year(self, year):
         """Проверка года произведения."""
-        if year > datetime.now().year:
+        current_year = datetime.now().year
+        if year > current_year:
             raise serializers.ValidationError(
-                f'Год выпуска произведения больше {year}!'
+                f'Год выпуска произведения больше {current_year}!'
             )
         return year
 
