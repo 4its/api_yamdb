@@ -88,6 +88,16 @@ class Titles(TextField):
         verbose_name_plural = 'произведение'
         default_related_name = 'titles'
 
+    def rating(self):
+        reviews = self.reviews.all()
+        rating = 0
+        for review in reviews:
+            rating = rating + review.score
+        reviews_count = len(reviews)
+        if reviews_count != 0:
+            return rating // reviews_count
+        return 0
+
 
 class Categories(TextField):
     """Модель для категорий."""
