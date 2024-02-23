@@ -14,7 +14,6 @@ from .serializers import (
     GenresSerializer,
     ReviewsSerializer,
     TitlesSerializer,
-    UserSerializer,
     SignupSerializer,
     TokenSerializer,
 )
@@ -51,8 +50,10 @@ class UserSignupView(CreateAPIView):
 
 
 class TokenView(CreateAPIView):
-    """Класс для получения токена по средствам
-    предоставления username и confirmation_code."""
+    """
+    Класс для получения токена по средствам
+    предоставления username и confirmation_code.
+    """
 
     def post(self, request):
         serializer = TokenSerializer(data=request.data)
