@@ -60,13 +60,6 @@ class UserSerializer(serializers.ModelSerializer):
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role',
         )
-        validators = (
-            serializers.UniqueTogetherValidator(
-                queryset=User.objects.all(),
-                fields=('username', 'email'),
-                message='User already exists',
-            ),
-        )
 
     def validate_username(self, username):
         """Запрет использования имени 'me'."""
