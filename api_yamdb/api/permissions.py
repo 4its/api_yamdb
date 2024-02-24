@@ -21,3 +21,6 @@ class AdminOrReadOnly(permissions.BasePermission):
         return True
 
 
+class AdminOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return check_admin(request)
