@@ -3,13 +3,15 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django_filters.rest_framework import DjangoFilterBackend
 
-from rest_framework import filters, viewsets, status, permissions, generics
+from rest_framework import (
+    filters, viewsets, status, permissions, generics, mixins
+)
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.pagination import PageNumberPagination
 
-from .permissions import AdminOrReadOnly
+from .permissions import AdminOrReadOnly, AdminOnly
 from .serializers import (
     CategoriesSerializer,
     GenresSerializer,
@@ -86,15 +88,22 @@ class UserViewSet(viewsets.ModelViewSet):
     )
     search_fields = ('username',)
     lookup_field = 'username'
+    permission_classes = (AdminOnly,)
     serializer_class = UserSerializer
     pagination_class = PageNumberPagination
     ordering = ('id',)
 
+    def update(self, request, *args, **kwargs):
+        if request.method == 'PATCH':
+            return super().update(request, *args, **kwargs)
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-class UserMeView(generics.RetrieveAPIView):
+
+class UserMeView(generics.RetrieveUpdateAPIView):
     """Вьюсет для работы с endpoint'ом users/me."""
 
     serializer_class = MeSerializer
+    permission_classes = (permissions.IsAuthenticated,)
 
     def get_object(self):
         return self.request.user
