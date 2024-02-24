@@ -6,7 +6,8 @@ from django.core.management.utils import get_random_secret_key
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = get_random_secret_key()
+SECRET_KEY = 'p&l%385148kslhtyn^##a1)ilz@4zqj=rq&agdol^##zgl9(vs'
+# SECRET_KEY = get_random_secret_key()
 
 DEBUG = True
 
@@ -107,6 +108,9 @@ SIMPLE_JWT = {
 }
 
 REST_FRAMEWORK = {
+    # "DEFAULT_PERMISSION_CLASSES": [
+    #     "rest_framework.permissions.IsAuthenticated",
+    # ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
