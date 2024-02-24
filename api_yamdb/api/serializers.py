@@ -29,6 +29,10 @@ class SignupSerializer(serializers.ModelSerializer):
 class TokenSerializer(serializers.ModelSerializer):
     """Сериализатор для обработки запроса на получение токена с помощью
         имени пользователя и confirmation_code."""
+    username = serializers.RegexField(
+        regex=r'^[\w.@+-]+\Z',
+        max_length=User.USERNAME_LENGTH,
+    )
     confirmation_code = serializers.CharField()
 
     class Meta:
