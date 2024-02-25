@@ -166,12 +166,23 @@ class GenresViewSet(viewsets.ModelViewSet):
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
     pagination_class = PageNumberPagination
-    permission_classes = (AdminOrReadOnly,)
+    permission_classes = (CategoryPermission,)
     filter_backends = (
         DjangoFilterBackend,
         filters.SearchFilter,
     )
     search_fields = ('name',)
+
+    def retrieve(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def update(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = get_object_or_404(Genres, slug=self.kwargs.get('pk'))
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
