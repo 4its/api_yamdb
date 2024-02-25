@@ -3,8 +3,6 @@
 from rest_framework import permissions, exceptions
 
 
-
-
 def check_admin(request):
     if request.user.is_authenticated:
         return request.user.role == 'admin' or request.user.is_superuser
