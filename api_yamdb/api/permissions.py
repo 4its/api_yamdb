@@ -1,6 +1,6 @@
 # cats/permissions.py
 
-from rest_framework import permissions
+from rest_framework import permissions, exceptions
 
 
 def check_admin(request):
@@ -9,8 +9,7 @@ def check_admin(request):
 
 
 def check_safe_methods(request):
-    if request.method in permissions.SAFE_METHODS:
-        return True
+    return request.method in permissions.SAFE_METHODS
 
 
 class AdminOrReadOnly(permissions.BasePermission):
@@ -23,4 +22,14 @@ class AdminOrReadOnly(permissions.BasePermission):
 
 class AdminOnly(permissions.BasePermission):
     def has_permission(self, request, view):
+        return check_admin(request)
+
+
+class CategoryPermission(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return check_safe_methods(request) or check_admin(request)
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in ('GET', 'PUT', 'PATCH'):
+            raise exceptions.MethodNotAllowed(request.method)
         return check_admin(request)

@@ -12,8 +12,8 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.pagination import PageNumberPagination
 
+from .permissions import AdminOrReadOnly, AdminOnly, CategoryPermission
 from .filters import GenreCategoryFilter
-from .permissions import AdminOrReadOnly, AdminOnly
 from .serializers import (
     CategoriesSerializer,
     GenresSerializer,
@@ -143,12 +143,13 @@ class CategoriesViewSet(viewsets.ModelViewSet):
     queryset = Categories.objects.all()
     serializer_class = CategoriesSerializer
     pagination_class = PageNumberPagination
-    permission_classes = (AdminOrReadOnly,)
+    permission_classes = (CategoryPermission,)
     filter_backends = (
         DjangoFilterBackend,
         filters.SearchFilter,
     )
     search_fields = ('name',)
+    lookup_field = 'slug'
 
 
 class GenresViewSet(viewsets.ModelViewSet):
