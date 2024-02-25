@@ -120,6 +120,11 @@ class TitleViewSet(viewsets.ModelViewSet):
     )
     filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
 
+    def update(self, request, *args, **kwargs):
+        if request.method == 'PATCH':
+            return super().update(request, *args, **kwargs)
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
 
 class CategoriesViewSet(viewsets.ModelViewSet):
     """
