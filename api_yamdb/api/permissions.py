@@ -31,3 +31,24 @@ class CategoryPermission(permissions.BasePermission):
         if request.method in ('GET', 'PUT', 'PATCH'):
             raise exceptions.MethodNotAllowed(request.method)
         return check_admin(request)
+
+
+class IsAuthorOrReadOnly(permissions.BasePermission):
+    """Разрешает действия с review автору, модератору и админу."""
+
+    def has_permission(self, request, view):
+        """Проверяет права пользователя на запрос."""
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return request.user.is_authenticated
+
+    def has_object_permission(self, request, view, obj):
+        """Проверяет права пользователя на объект."""
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        return (
+                obj.author == request.user or
+                request.user.is_staff or
+                request.user.role in ['moderator', 'admin']
+        )

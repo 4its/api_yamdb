@@ -7,13 +7,15 @@ from rest_framework import (
     filters, viewsets, status, permissions, generics, mixins
 )
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.filters import SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.pagination import PageNumberPagination
 
-from .permissions import AdminOrReadOnly, AdminOnly, CategoryPermission
+from .permissions import (AdminOrReadOnly,
+                          AdminOnly,
+                          CategoryPermission,
+                          IsAuthorOrReadOnly)
 from .filters import GenreCategoryFilter
 from .serializers import (
     CategoriesSerializer,
@@ -214,10 +216,12 @@ class ReviewsViewSet(CheckAuthorMixin):
 
     - GET;
     - POST;
+    - PATCH;
     - DELETE.
     """
 
     serializer_class = ReviewsSerializer
+    permission_classes = (IsAuthorOrReadOnly,)
 
     def get_title(self):
         """Получает объект произведения."""
