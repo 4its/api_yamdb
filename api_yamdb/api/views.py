@@ -6,6 +6,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (
     filters, viewsets, status, permissions, generics, mixins
 )
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
@@ -30,6 +31,26 @@ from .serializers import (
 from reviews.models import Categories, Genres, Titles, Reviews
 
 User = get_user_model()
+
+EXCEPTION_MESSAGES = 'Изменение чужого контента запрещено!'
+
+
+class CheckAuthorMixin(viewsets.ModelViewSet):
+    def perform_update(self, serializer):
+        if (
+                (serializer.instance.author != self.request.user)
+                & (self.request.user.role not in ('admin', 'moderator'))
+        ):
+            raise PermissionDenied(EXCEPTION_MESSAGES)
+        super(CheckAuthorMixin, self).perform_update(serializer)
+
+    def perform_destroy(self, instance):
+        if (
+                (instance.author != self.request.user)
+                & (self.request.user.role not in ('admin', 'moderator'))
+        ):
+            raise PermissionDenied(EXCEPTION_MESSAGES)
+        super(CheckAuthorMixin, self).perform_destroy(instance)
 
 
 class UserSignupView(generics.CreateAPIView):
@@ -187,7 +208,7 @@ class GenresViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class ReviewsViewSet(viewsets.ModelViewSet):
+class ReviewsViewSet(CheckAuthorMixin):
     """
     ViewSet для работы с моделью Genre.
 
@@ -216,6 +237,11 @@ class ReviewsViewSet(viewsets.ModelViewSet):
             author=self.request.user,
             title_id=self.get_title().id
         )
+
+    def update(self, request, *args, **kwargs):
+        if request.method == 'PATCH':
+            return super().update(request, *args, **kwargs)
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
