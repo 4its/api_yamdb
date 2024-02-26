@@ -6,7 +6,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (
     filters, viewsets, status, permissions, generics, mixins
 )
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
@@ -28,7 +28,7 @@ from .serializers import (
     TokenSerializer,
     CommentsSerializer
 )
-from reviews.models import Categories, Genres, Titles, Reviews
+from reviews.models import Categories, Genres, Title, Review
 
 User = get_user_model()
 
@@ -135,7 +135,7 @@ class UserMeView(generics.RetrieveUpdateAPIView):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Titles.objects.all()
+    queryset = Title.objects.all()
     serializer_class = TitlesSerializer
     pagination_class = PageNumberPagination
     permission_classes = (AdminOrReadOnly,)
@@ -225,7 +225,7 @@ class ReviewsViewSet(CheckAuthorMixin):
 
     def get_title(self):
         """Получает объект произведения."""
-        return get_object_or_404(Titles, id=self.kwargs.get('title_id'))
+        return get_object_or_404(Title, id=self.kwargs.get('title_id'))
 
     def get_queryset(self):
         """Возвращает все обзоры на произведение."""
@@ -259,7 +259,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_reviews(self):
         """Получает объект ревью"""
-        return get_object_or_404(Reviews, id=self.kwargs.get('review_id'))
+        return get_object_or_404(Review, id=self.kwargs.get('review_id'))
 
     def get_queryset(self):
         """Возвращает все комментарии на ревью."""

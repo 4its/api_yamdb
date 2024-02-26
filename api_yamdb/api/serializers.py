@@ -2,7 +2,7 @@ from datetime import datetime
 
 from rest_framework import serializers, validators
 
-from reviews.models import Categories, Genres, Reviews, Titles, User, Comments
+from reviews.models import Categories, Genres, Review, Title, User, Comment
 
 USER_FIELDS_VALIDATOR = (
     validators.UniqueValidator(
@@ -113,7 +113,7 @@ class TitlesSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = Titles
+        model = Title
         fields = ('id', 'name', 'year', 'rating',
                   'description', 'genre', 'category',)
 
@@ -130,7 +130,7 @@ class TitlesSerializer(serializers.ModelSerializer):
         """Создает экземпляр объекта Title."""
         genres_data = validated_data.pop('genre')
         category_data = validated_data.pop('category')
-        title = Titles.objects.create(
+        title = Title.objects.create(
             category=category_data, **validated_data)
         title.genre.set(genres_data)
         title.save()
@@ -157,7 +157,7 @@ class ReviewsSerializer(serializers.ModelSerializer):
     class Meta:
         """Метакласс сериализатора Reviews."""
         fields = ('id', 'text', 'author', 'score', 'pub_date',)
-        model = Reviews
+        model = Review
 
     def score_validate(self, validated_data):
         """Проверка оценки произведения."""
@@ -178,5 +178,5 @@ class CommentsSerializer(serializers.ModelSerializer):
 
     class Meta:
         """Метакласс сериализатора Comments."""
-        model = Comments
+        model = Comment
         fields = ('id', 'text', 'author', 'pub_date',)
