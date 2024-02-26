@@ -2,7 +2,7 @@ from datetime import datetime
 
 from rest_framework import serializers, validators
 
-from reviews.models import Categories, Genres, Reviews, Titles, User
+from reviews.models import Categories, Genres, Reviews, Titles, User, Comments
 
 USER_FIELDS_VALIDATOR = (
     validators.UniqueValidator(
@@ -29,6 +29,10 @@ class SignupSerializer(serializers.ModelSerializer):
 class TokenSerializer(serializers.ModelSerializer):
     """Сериализатор для обработки запроса на получение токена с помощью
         имени пользователя и confirmation_code."""
+    username = serializers.RegexField(
+        regex=r'^[\w.@+-]+\Z',
+        max_length=User.USERNAME_LENGTH,
+    )
     confirmation_code = serializers.CharField()
 
     class Meta:
@@ -56,13 +60,6 @@ class UserSerializer(serializers.ModelSerializer):
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role',
         )
-        validators = (
-            serializers.UniqueTogetherValidator(
-                queryset=User.objects.all(),
-                fields=('username', 'email'),
-                message='User already exists',
-            ),
-        )
 
     def validate_username(self, username):
         """Запрет использования имени 'me'."""
@@ -82,7 +79,7 @@ class MeSerializer(serializers.ModelSerializer):
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role',
         )
-        read_only_fields = ('id', 'role')
+        read_only_fields = ('id', 'role',)
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -118,7 +115,7 @@ class TitlesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Titles
         fields = ('id', 'name', 'year', 'rating',
-                  'description', 'genre', 'category')
+                  'description', 'genre', 'category',)
 
     def to_representation(self, instance):
         """Представление данных модели Titles при GET запросе."""
@@ -152,9 +149,14 @@ class TitlesSerializer(serializers.ModelSerializer):
 class ReviewsSerializer(serializers.ModelSerializer):
     """Сериализатор модели Reviews."""
 
+    author = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username'
+    )
+
     class Meta:
         """Метакласс сериализатора Reviews."""
-        exclude = ('author', 'title',)
+        fields = ('id', 'text', 'author', 'score', 'pub_date',)
         model = Reviews
 
     def score_validate(self, validated_data):
@@ -171,12 +173,10 @@ class ReviewsSerializer(serializers.ModelSerializer):
         return score
 
 
-
-
 class CommentsSerializer(serializers.ModelSerializer):
     """Сериализатор модели Comments."""
 
     class Meta:
         """Метакласс сериализатора Comments."""
-        model = Titles
-        exclude = ('author',)
+        model = Comments
+        fields = ('id', 'text', 'author', 'pub_date',)

@@ -3,12 +3,20 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django_filters.rest_framework import DjangoFilterBackend
 
-from rest_framework import filters, viewsets, status, permissions, generics
+from rest_framework import (
+    filters, viewsets, status, permissions, generics, mixins
+)
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.pagination import PageNumberPagination
 
+from .permissions import (AdminOrReadOnly,
+                          AdminOnly,
+                          CategoryPermission,
+                          IsAuthorOrReadOnly)
+from .filters import GenreCategoryFilter
 from .serializers import (
     CategoriesSerializer,
     GenresSerializer,
@@ -18,10 +26,31 @@ from .serializers import (
     MeSerializer,
     SignupSerializer,
     TokenSerializer,
+    CommentsSerializer
 )
 from reviews.models import Categories, Genres, Titles, Reviews
 
 User = get_user_model()
+
+EXCEPTION_MESSAGES = 'Изменение чужого контента запрещено!'
+
+
+class CheckAuthorMixin(viewsets.ModelViewSet):
+    def perform_update(self, serializer):
+        if (
+                (serializer.instance.author != self.request.user)
+                & (self.request.user.role not in ('admin', 'moderator'))
+        ):
+            raise PermissionDenied(EXCEPTION_MESSAGES)
+        super(CheckAuthorMixin, self).perform_update(serializer)
+
+    def perform_destroy(self, instance):
+        if (
+                (instance.author != self.request.user)
+                & (self.request.user.role not in ('admin', 'moderator'))
+        ):
+            raise PermissionDenied(EXCEPTION_MESSAGES)
+        super(CheckAuthorMixin, self).perform_destroy(instance)
 
 
 class UserSignupView(generics.CreateAPIView):
@@ -84,15 +113,22 @@ class UserViewSet(viewsets.ModelViewSet):
     )
     search_fields = ('username',)
     lookup_field = 'username'
+    permission_classes = (AdminOnly,)
     serializer_class = UserSerializer
     pagination_class = PageNumberPagination
     ordering = ('id',)
 
+    def update(self, request, *args, **kwargs):
+        if request.method == 'PATCH':
+            return super().update(request, *args, **kwargs)
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-class UserMeView(generics.RetrieveAPIView):
+
+class UserMeView(generics.RetrieveUpdateAPIView):
     """Вьюсет для работы с endpoint'ом users/me."""
 
     serializer_class = MeSerializer
+    permission_classes = (permissions.IsAuthenticated,)
 
     def get_object(self):
         return self.request.user
@@ -102,11 +138,18 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Titles.objects.all()
     serializer_class = TitlesSerializer
     pagination_class = PageNumberPagination
+    permission_classes = (AdminOrReadOnly,)
     filter_backends = (
         DjangoFilterBackend,
-        filters.OrderingFilter
+        filters.OrderingFilter,
+        GenreCategoryFilter
     )
     filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
+
+    def update(self, request, *args, **kwargs):
+        if request.method == 'PATCH':
+            return super().update(request, *args, **kwargs)
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
@@ -123,11 +166,13 @@ class CategoriesViewSet(viewsets.ModelViewSet):
     queryset = Categories.objects.all()
     serializer_class = CategoriesSerializer
     pagination_class = PageNumberPagination
+    permission_classes = (CategoryPermission,)
     filter_backends = (
         DjangoFilterBackend,
         filters.SearchFilter,
     )
     search_fields = ('name',)
+    lookup_field = 'slug'
 
 
 class GenresViewSet(viewsets.ModelViewSet):
@@ -144,14 +189,26 @@ class GenresViewSet(viewsets.ModelViewSet):
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
     pagination_class = PageNumberPagination
+    permission_classes = (CategoryPermission,)
     filter_backends = (
         DjangoFilterBackend,
         filters.SearchFilter,
     )
     search_fields = ('name',)
 
+    def retrieve(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-class ReviewsViewSet(viewsets.ModelViewSet):
+    def update(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = get_object_or_404(Genres, slug=self.kwargs.get('pk'))
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ReviewsViewSet(CheckAuthorMixin):
     """
     ViewSet для работы с моделью Genre.
 
@@ -159,10 +216,12 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 
     - GET;
     - POST;
+    - PATCH;
     - DELETE.
     """
 
     serializer_class = ReviewsSerializer
+    permission_classes = (IsAuthorOrReadOnly,)
 
     def get_title(self):
         """Получает объект произведения."""
@@ -174,7 +233,15 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """Создает обзор на произведение."""
-        serializer.save(author=self.request.user, title=self.get_title())
+        serializer.save(
+            author=self.request.user,
+            title_id=self.get_title().id
+        )
+
+    def update(self, request, *args, **kwargs):
+        if request.method == 'PATCH':
+            return super().update(request, *args, **kwargs)
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -187,6 +254,8 @@ class CommentViewSet(viewsets.ModelViewSet):
     - POST;
     - DELETE.
     """
+
+    serializer_class = CommentsSerializer
 
     def get_reviews(self):
         """Получает объект ревью"""
