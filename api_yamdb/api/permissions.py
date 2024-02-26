@@ -37,16 +37,18 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
     """Разрешает действия с review автору, модератору и админу."""
 
     def has_permission(self, request, view):
+        """Проверяет права пользователя на запрос."""
         if request.method in permissions.SAFE_METHODS:
             return True
-        elif request.method == 'POST':
-            return request.user and request.user.is_authenticated
+        return request.user.is_authenticated
 
     def has_object_permission(self, request, view, obj):
+        """Проверяет права пользователя на объект."""
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        if request.user == obj.author or request.user.is_moderator or request.user.is_admin:
-            return True
-
-        return False
+        return (
+                obj.author == request.user or
+                request.user.is_staff or
+                request.user.role in ['moderator', 'admin']
+        )
