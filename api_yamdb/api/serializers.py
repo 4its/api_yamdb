@@ -79,7 +79,7 @@ class MeSerializer(serializers.ModelSerializer):
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role',
         )
-        read_only_fields = ('id', 'role')
+        read_only_fields = ('id', 'role',)
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -115,7 +115,7 @@ class TitlesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Titles
         fields = ('id', 'name', 'year', 'rating',
-                  'description', 'genre', 'category')
+                  'description', 'genre', 'category',)
 
     def to_representation(self, instance):
         """Представление данных модели Titles при GET запросе."""
@@ -149,9 +149,14 @@ class TitlesSerializer(serializers.ModelSerializer):
 class ReviewsSerializer(serializers.ModelSerializer):
     """Сериализатор модели Reviews."""
 
+    author = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username'
+    )
+
     class Meta:
         """Метакласс сериализатора Reviews."""
-        exclude = ('author', 'title',)
+        fields = ('id', 'text', 'author', 'score', 'pub_date',)
         model = Reviews
 
     def score_validate(self, validated_data):
@@ -174,4 +179,4 @@ class CommentsSerializer(serializers.ModelSerializer):
     class Meta:
         """Метакласс сериализатора Comments."""
         model = Comments
-        fields = ('id', 'text', 'author', 'pub_date')
+        fields = ('id', 'text', 'author', 'pub_date',)
