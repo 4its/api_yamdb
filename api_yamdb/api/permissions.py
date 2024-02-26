@@ -34,7 +34,7 @@ class CategoryPermission(permissions.BasePermission):
 
 
 class IsAuthorOrReadOnly(permissions.BasePermission):
-    """Разрешает действия с review автору, модератору и админу."""
+    """Разрешает действия с reviews автору, модератору и админу."""
 
     def has_permission(self, request, view):
         """Проверяет права пользователя на запрос."""

@@ -76,7 +76,7 @@ class TextField(models.Model):
         )
 
 
-class Titles(TextField):
+class Title(TextField):
     """Модель для произведений."""
 
     name = models.CharField(max_length=256, verbose_name='Название')
@@ -148,12 +148,12 @@ class Genres(TextField):
         verbose_name_plural = 'жанры'
 
 
-class Reviews(TextField):
+class Review(TextField):
     """Модель для отзывов."""
 
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.ForeignKey(
-        Titles,
+        Title,
         on_delete=models.CASCADE,
         related_name='reviews',
         verbose_name='Обзор'
@@ -171,12 +171,12 @@ class Reviews(TextField):
         verbose_name_plural = 'отзывы'
 
 
-class Comments(TextField):
+class Comment(TextField):
     """Модель для комментариев."""
 
     author = models.ForeignKey(User, on_delete=models.CASCADE)
-    review = models.ForeignKey(
-        Reviews,
+    reviews = models.ForeignKey(
+        Review,
         on_delete=models.CASCADE,
         related_name='comment'
     )
