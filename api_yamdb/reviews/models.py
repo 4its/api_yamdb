@@ -7,6 +7,8 @@ from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.template.defaultfilters import truncatechars, truncatewords
 
+from .validators import validate_username
+
 
 WORDS_ON_TEXT = 10      # TODO Подумать, нужно ли...
 RESERVED_USERNAMES = ('me',)
@@ -22,17 +24,14 @@ OUTPUT_LENGTH = 25
 class BaseCategoryGenre(models.Model):
 
     name = models.TextField(
-        max_length=256,
+        max_length=NAME_FIELD_LENGTH,
         verbose_name='Имя'
     )
     slug = models.SlugField(
-        max_length=50,
+        max_length=SLUG_FIELD_LENGTH,
         unique=True,
         verbose_name='Слаг'
     )
-
-    class Meta:
-        ordering = ('name',)
 
     def __str__(self):
         return self.name[:OUTPUT_LENGTH]
@@ -46,25 +45,8 @@ class BaseReviewComment(models.Model):
         auto_now_add=True
     )
 
-    class Meta:
-        ordering = ('text',)
-
     def __str__(self):
         return self.text[:OUTPUT_LENGTH]
-
-
-def validate_username(username):
-    """Username validation method"""
-    regex = r'^[\w.@+-]+\Z'
-    if not re.match(regex, username):
-        raise ValidationError(
-            'Использованы некорректные символы.', code='invalid_symbols'
-        )
-    if username.lower() in RESERVED_USERNAMES:
-        raise ValidationError(
-            'Выбранное имя является зарезервированным. Используйте иное',
-            code='reserved_username'
-        )
 
 
 class User(AbstractUser):
@@ -75,12 +57,10 @@ class User(AbstractUser):
         admin = 'admin', 'Администратор'
 
     username = models.CharField(
+        verbose_name='Имя пользователя',
         max_length=STANDARD_FIELD_LENGTH,
         unique=True,
-        validators=(RegexValidator(
-            r'^[\w.@+-]+\Z',
-            message='Имя пользователя содержит недопустимые символы'
-        ),)
+        validators=(validate_username,)
     )
     email = models.EmailField(
         verbose_name='Эл.почта',
@@ -106,7 +86,7 @@ class User(AbstractUser):
         verbose_name='Роль',
         choices=RoleChoice.choices,
         default=RoleChoice.user,
-        max_length=9,
+        max_length=max(len(choice) for choice in RoleChoice.__dict__),
     )
 
     class Meta:
@@ -115,33 +95,25 @@ class User(AbstractUser):
         default_related_name = 'users'
         ordering = ('username',)
 
-    def clean(self):
-        super().clean()
-        regex = r'^[\w.@+-]+\Z'
-        if not re.match(regex, username):
-            raise ValidationError(
-                ('Username состоит только из латинских букв, цифр и'
-                 ' символов @, ., +, -, _,'),
-                code='invalid_symbols'
-            )
-
     def __str__(self):
-        chars_on_username = 25
-        return truncatechars(self.username, chars_on_username)
+        return self.username[:OUTPUT_LENGTH]
 
 
 class Title(models.Model):
     """Модель для произведений."""
 
-    name = models.CharField(max_length=256, verbose_name='Название')
-    year = models.IntegerField(verbose_name='Год выпуска')
+    name = models.CharField(
+        max_length=NAME_FIELD_LENGTH,
+        verbose_name='Название',
+    )
+    year = models.IntegerField(verbose_name='Год выпуска',)
     description = models.TextField(verbose_name='Описание')
+    genre = models.ManyToManyField('Genre')
     category = models.ForeignKey(
-        'Categories',
+        'Category',
         on_delete=models.SET_NULL,
         null=True
     )
-    genre = models.ManyToManyField('Genres')
 
     class Meta:
         verbose_name = 'Произведение'
@@ -165,20 +137,24 @@ class Title(models.Model):
         return self.name[:OUTPUT_LENGTH]
 
 
-class Categories(BaseCategoryGenre):
+class Category(BaseCategoryGenre):
     """Модель для категорий."""
 
-    class Meta(BaseCategoryGenre.Meta):
+    class Meta:
         verbose_name = 'Категория'
         verbose_name_plural = 'категории'
+        default_related_name = 'categories'
+        ordering = ('name',)
 
 
-class Genres(BaseCategoryGenre):
+class Genre(BaseCategoryGenre):
     """Модель для жанра."""
 
-    class Meta(BaseCategoryGenre.Meta):
+    class Meta:
         verbose_name = 'Жанр'
         verbose_name_plural = 'жанры'
+        default_related_name = 'genres'
+        ordering = ('name',)
 
 
 class Review(BaseReviewComment):
@@ -191,16 +167,17 @@ class Review(BaseReviewComment):
     )
     score = models.SmallIntegerField(verbose_name='Оценка')
 
-    class Meta(BaseReviewComment.Meta):
+    class Meta:
         verbose_name = 'Отзыв'
         verbose_name_plural = 'отзывы'
-        default_related_name = 'review'
-        constraints = (
-            models.UniqueConstraint(
-                fields=('title', 'author'),
-                name='unique_review'
-            ),
-        )
+        default_related_name = 'reviews'
+        ordering = ('title',)
+        # constraints = (
+        #     models.UniqueConstraint(
+        #         fields=('title', 'author'),
+        #         name='unique_review'
+        #     ),
+        # )
 
     def clean(self):
         if not MINIMUM_SCORE <= self.score <= MAXIMUM_SCORE:
@@ -216,13 +193,13 @@ class Review(BaseReviewComment):
 
 class Comment(BaseReviewComment):
 
-    reviews = models.ForeignKey(
+    review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
-        related_name='comment'
     )
 
-    class Meta(BaseReviewComment.Meta):
+    class Meta:
         verbose_name = 'Комментарий'
         verbose_name_plural = 'комментарий'
-        default_related_name = 'comment'
+        default_related_name = 'comments'
+        ordering = ('pub_date',)

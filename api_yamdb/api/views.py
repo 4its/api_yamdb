@@ -19,7 +19,7 @@ from .serializers import (
     TitlesSerializer, UserSerializer, MeSerializer, SignupSerializer,
     TokenSerializer, CommentsSerializer
 )
-from reviews.models import Categories, Genres, Title, Review, User
+from reviews.models import User, Title, Review, Genre, Category, Comment
 
 
 EXCEPTION_MESSAGES = 'Изменение чужого контента запрещено!'
@@ -130,7 +130,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
-    queryset = Categories.objects.all()
+    queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
     pagination_class = PageNumberPagination
     permission_classes = (CategoryPermission,)
@@ -143,7 +143,7 @@ class CategoriesViewSet(viewsets.ModelViewSet):
 
 
 class GenresViewSet(viewsets.ModelViewSet):
-    queryset = Genres.objects.all()
+    queryset = Genre.objects.all()
     serializer_class = GenresSerializer
     pagination_class = PageNumberPagination
     permission_classes = (CategoryPermission,)
@@ -161,7 +161,7 @@ class GenresViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         self.perform_destroy(generics.get_object_or_404(
-            Genres, slug=self.kwargs.get('pk')
+            Genre, slug=self.kwargs.get('pk')
         ))
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -200,12 +200,12 @@ class CommentViewSet(CheckAuthorMixin):
         )
 
     def get_queryset(self):
-        return self.get_review().comment.all()
+        return self.get_review().comments.all()
 
     def perform_create(self, serializer):
         serializer.save(
             author=self.request.user,
-            reviews=self.get_review(),
+            review=self.get_review(),
         )
 
     def update(self, request, *args, **kwargs):
