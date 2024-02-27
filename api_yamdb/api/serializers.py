@@ -130,14 +130,6 @@ class TitlesSerializer(serializers.ModelSerializer):
         title.save()
         return title
 
-    def validate_year(self, year):
-        current_year = datetime.now().year
-        if year > current_year:
-            raise serializers.ValidationError(
-                f'Год выпуска произведения больше {current_year}!'
-            )
-        return year
-
 
 class ReviewsSerializer(serializers.ModelSerializer):
 
@@ -158,22 +150,6 @@ class ReviewsSerializer(serializers.ModelSerializer):
         if review and request.method == 'POST':
             raise ValidationError('Вы уже оставили отзыв на это произведение')
         return data
-
-    def score_validate(self, validated_data):
-        """Проверка оценки произведения."""
-        minimum_score = 1
-        maximum_score = 10
-        score = validated_data.pop('score')
-        if not minimum_score <= score <= maximum_score:
-            raise serializers.ValidationError(
-                f'Величина оценки вне диапазона '
-                f'[{minimum_score}...{maximum_score}]!'
-            )
-        return score
-
-    def create(self, validated_data):
-        score = self.score_validate(validated_data)
-        return Review.objects.create(**validated_data, score=score)
 
 
 class CommentsSerializer(serializers.ModelSerializer):

@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 
 from django.db import models
 from django.contrib.auth.models import AbstractUser
@@ -13,6 +14,43 @@ STANDARD_FIELD_LENGTH = 150
 NAME_FIELD_LENGTH = 256
 SLUG_FIELD_LENGTH = 50
 EMAIL_FIELD_LENGTH = 254
+MINIMUM_SCORE = 1
+MAXIMUM_SCORE = 10
+OUTPUT_LENGTH = 25
+
+
+class BaseCategoryGenre(models.Model):
+
+    name = models.TextField(
+        max_length=256,
+        verbose_name='Имя'
+    )
+    slug = models.SlugField(
+        max_length=50,
+        unique=True,
+        verbose_name='Слаг'
+    )
+
+    class Meta:
+        ordering = ('name',)
+
+    def __str__(self):
+        return self.name[:OUTPUT_LENGTH]
+
+
+class BaseReviewComment(models.Model):
+    author = models.ForeignKey('User', on_delete=models.CASCADE)
+    text = models.TextField(verbose_name='Текст')
+    pub_date = models.DateTimeField(
+        verbose_name='Дата публикации',
+        auto_now_add=True
+    )
+
+    class Meta:
+        ordering = ('text',)
+
+    def __str__(self):
+        return self.text[:OUTPUT_LENGTH]
 
 
 def validate_username(username):
@@ -27,6 +65,7 @@ def validate_username(username):
             'Выбранное имя является зарезервированным. Используйте иное',
             code='reserved_username'
         )
+
 
 class User(AbstractUser):
 
@@ -86,24 +125,12 @@ class User(AbstractUser):
                 code='invalid_symbols'
             )
 
-
     def __str__(self):
         chars_on_username = 25
         return truncatechars(self.username, chars_on_username)
 
 
-class TextField(models.Model):
-    """Класс для преобразования полей модели в строку."""
-
-    def __str__(self) -> str:
-        """Возвращает все поля модели."""
-        return truncatewords(
-            ' '.join([value for value in self.__dict__]),
-            WORDS_ON_TEXT
-        )
-
-
-class Title(TextField):
+class Title(models.Model):
     """Модель для произведений."""
 
     name = models.CharField(max_length=256, verbose_name='Название')
@@ -120,66 +147,54 @@ class Title(TextField):
         verbose_name = 'Произведение'
         verbose_name_plural = 'произведение'
         default_related_name = 'titles'
-        ordering = ('id',)
+        ordering = ('year', 'name')
+
+    def clean(self):
+        current_year = datetime.now().year
+        if self.year > current_year:
+            raise ValidationError(
+                f'Год выпуска произведения не должен превышать текущий\n'
+                f'{self.year} > {current_year}!'
+            )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name[:OUTPUT_LENGTH]
 
 
-class Categories(TextField):
+class Categories(BaseCategoryGenre):
     """Модель для категорий."""
 
-    name = models.TextField(
-        max_length=256,
-        verbose_name='Имя'
-    )
-    slug = models.SlugField(
-        max_length=50,
-        unique=True,
-        verbose_name='Слаг'
-    )
-
-    class Meta:
+    class Meta(BaseCategoryGenre.Meta):
         verbose_name = 'Категория'
         verbose_name_plural = 'категории'
-        ordering = ('id',)
 
 
-class Genres(TextField):
+class Genres(BaseCategoryGenre):
     """Модель для жанра."""
 
-    name = models.TextField(
-        max_length=256,
-        verbose_name='Имя'
-    )
-    slug = models.SlugField(
-        max_length=50,
-        unique=True,
-        verbose_name='Слаг'
-    )
-
-    class Meta:
+    class Meta(BaseCategoryGenre.Meta):
         verbose_name = 'Жанр'
         verbose_name_plural = 'жанры'
 
 
-class Review(TextField):
+class Review(BaseReviewComment):
 
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
         related_name='reviews',
         verbose_name='Обзор'
     )
-    text = models.TextField(verbose_name='Текст отзыва')
-    score = models.SmallIntegerField(verbose_name='(Оценка')
-    pub_date = models.DateTimeField(
-        verbose_name='Дата публикации',
-        auto_now_add=True
-    )
+    score = models.SmallIntegerField(verbose_name='Оценка')
 
-    class Meta:
+    class Meta(BaseReviewComment.Meta):
         verbose_name = 'Отзыв'
         verbose_name_plural = 'отзывы'
-        ordering = ('id',)
+        default_related_name = 'review'
         constraints = (
             models.UniqueConstraint(
                 fields=('title', 'author'),
@@ -187,22 +202,27 @@ class Review(TextField):
             ),
         )
 
+    def clean(self):
+        if not MINIMUM_SCORE <= self.score <= MAXIMUM_SCORE:
+            raise ValidationError(
+                f'Величина оценки вне диапазона '
+                f'[{MINIMUM_SCORE}...{MAXIMUM_SCORE}]!'
+            )
 
-class Comment(TextField):
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+
+class Comment(BaseReviewComment):
+
     reviews = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
         related_name='comment'
     )
-    text = models.TextField(verbose_name='Текст коментария')
-    pub_date = models.DateTimeField(
-        verbose_name='Дата публикации',
-        auto_now_add=True
-    )
 
-    class Meta:
+    class Meta(BaseReviewComment.Meta):
         verbose_name = 'Комментарий'
         verbose_name_plural = 'комментарий'
-        ordering = ('id',)
+        default_related_name = 'comment'
