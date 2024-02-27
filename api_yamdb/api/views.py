@@ -235,7 +235,7 @@ class ReviewsViewSet(CheckAuthorMixin):
         """Создает обзор на произведение."""
         serializer.save(
             author=self.request.user,
-            title_id=self.get_title().id
+            title=self.get_title()
         )
 
     def update(self, request, *args, **kwargs):

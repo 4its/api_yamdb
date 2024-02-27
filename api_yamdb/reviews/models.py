@@ -159,6 +159,12 @@ class Review(TextField):
         """Дополнительная информация о модели Reviews."""
         verbose_name = 'Отзыв'
         verbose_name_plural = 'отзывы'
+        constraints = (
+            models.UniqueConstraint(
+                fields=('title', 'author'),
+                name='unique_review'
+            ),
+        )
 
 
 class Comment(TextField):
