@@ -244,7 +244,7 @@ class ReviewsViewSet(CheckAuthorMixin):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
-class CommentViewSet(viewsets.ModelViewSet):
+class CommentViewSet(CheckAuthorMixin):
     """
     ViewSet для работы с моделью Comment.
 
@@ -256,15 +256,24 @@ class CommentViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = CommentsSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
-    def get_reviews(self):
+    def get_review(self):
         """Получает объект ревью"""
         return get_object_or_404(Review, id=self.kwargs.get('review_id'))
 
     def get_queryset(self):
         """Возвращает все комментарии на ревью."""
-        return self.get_reviews().comment.all()
+        return self.get_review().comment.all()
 
     def perform_create(self, serializer):
         """Создает комментарий на ревью."""
-        serializer.save(author=self.request.user)
+        serializer.save(
+            author=self.request.user,
+            reviews=self.get_review(),
+        )
+
+    def update(self, request, *args, **kwargs):
+        if request.method == 'PATCH':
+            return super().update(request, *args, **kwargs)
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
