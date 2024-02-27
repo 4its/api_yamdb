@@ -3,7 +3,6 @@ from datetime import datetime
 from django.db.models import Avg
 from rest_framework import serializers, validators
 from rest_framework.exceptions import ValidationError
-from rest_framework.generics import get_object_or_404
 
 from reviews.models import Categories, Genres, Review, Title, User, Comment
 

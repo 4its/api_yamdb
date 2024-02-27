@@ -3,9 +3,9 @@ from django.contrib.auth.tokens import default_token_generator
 from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import (
-    filters, viewsets, status, permissions, generics, mixins
+    filters, viewsets, status, permissions, generics
 )
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.pagination import PageNumberPagination
