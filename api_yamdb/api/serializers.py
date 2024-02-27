@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from django.db.models import Avg
 from rest_framework import serializers, validators
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
@@ -113,11 +114,16 @@ class TitlesSerializer(serializers.ModelSerializer):
         slug_field='slug',
         queryset=Categories.objects.all()
     )
+    rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Title
         fields = ('id', 'name', 'year', 'rating',
                   'description', 'genre', 'category',)
+
+    def get_rating(self, obj):
+        num = Review.objects.filter().aggregate(avg_value=Avg('score'))
+        return num['avg_value']
 
     def to_representation(self, instance):
         """Представление данных модели Titles при GET запросе."""
