@@ -8,13 +8,10 @@ WORDS_ON_TEXT = 10
 
 
 class User(AbstractUser):
-    """Класс для пользователя"""
     USERNAME_LENGTH = AbstractUser._meta.get_field('username').max_length
     EMAIL_FIELD_LENGTH = 254
 
     class RoleChoice(models.TextChoices):
-        """Вспомогательный класс для определения роли пользователя."""
-
         user = 'user', 'User'
         moderator = 'moderator', 'Moderator'
         admin = 'admin', 'Admin'
@@ -47,20 +44,12 @@ class User(AbstractUser):
     )
 
     class Meta:
-        """Дополнительная информация и ограничения для модели User."""
         verbose_name = 'Пользователи'
         verbose_name_plural = 'пользователи'
         default_related_name = 'users'
         ordering = ('id',)
-        constraints = (
-            models.UniqueConstraint(
-                fields=('username', 'email'),
-                name='unique_user'
-            ),
-        )
 
     def __str__(self):
-        """Возвращает имя пользователя."""
         chars_on_username = 25
         return truncatechars(self.username, chars_on_username)
 
@@ -90,10 +79,10 @@ class Title(TextField):
     genre = models.ManyToManyField('Genres')
 
     class Meta:
-        """Дополнительная информация о модели Titles."""
         verbose_name = 'Произведение'
         verbose_name_plural = 'произведение'
         default_related_name = 'titles'
+        ordering = ('id',)
 
 
 class Categories(TextField):
@@ -101,18 +90,18 @@ class Categories(TextField):
 
     name = models.TextField(
         max_length=256,
-        verbose_name='Имя категории'
+        verbose_name='Имя'
     )
     slug = models.SlugField(
         max_length=50,
         unique=True,
-        verbose_name='Слаг категории'
+        verbose_name='Слаг'
     )
 
     class Meta:
-        """Дополнительная информация о модели Categories."""
         verbose_name = 'Категория'
         verbose_name_plural = 'категории'
+        ordering = ('id',)
 
 
 class Genres(TextField):
@@ -120,22 +109,20 @@ class Genres(TextField):
 
     name = models.TextField(
         max_length=256,
-        verbose_name='Имя жанра'
+        verbose_name='Имя'
     )
     slug = models.SlugField(
         max_length=50,
         unique=True,
-        verbose_name='Слаг жанра'
+        verbose_name='Слаг'
     )
 
     class Meta:
-        """Дополнительная информация о модели Genres."""
         verbose_name = 'Жанр'
         verbose_name_plural = 'жанры'
 
 
 class Review(TextField):
-    """Модель для отзывов."""
 
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.ForeignKey(
@@ -152,9 +139,9 @@ class Review(TextField):
     )
 
     class Meta:
-        """Дополнительная информация о модели Reviews."""
         verbose_name = 'Отзыв'
         verbose_name_plural = 'отзывы'
+        ordering = ('id',)
         constraints = (
             models.UniqueConstraint(
                 fields=('title', 'author'),
@@ -164,7 +151,6 @@ class Review(TextField):
 
 
 class Comment(TextField):
-    """Модель для комментариев."""
 
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     reviews = models.ForeignKey(
@@ -179,6 +165,6 @@ class Comment(TextField):
     )
 
     class Meta:
-        """Дополнительная информация о модели Comment."""
         verbose_name = 'Комментарий'
         verbose_name_plural = 'комментарий'
+        ordering = ('id',)

@@ -1,5 +1,4 @@
 from django.core.mail import send_mail
-from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -7,30 +6,21 @@ from rest_framework import (
     filters, viewsets, status, permissions, generics, mixins
 )
 from rest_framework.exceptions import PermissionDenied, ValidationError
-from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.pagination import PageNumberPagination
 
-from .permissions import (AdminOrReadOnly,
-                          AdminOnly,
-                          CategoryPermission,
-                          IsAuthorOrReadOnly)
+from .permissions import (
+    AdminOrReadOnly, AdminOnly, CategoryPermission, IsAuthorOrReadOnly
+)
 from .filters import GenreCategoryFilter
 from .serializers import (
-    CategoriesSerializer,
-    GenresSerializer,
-    ReviewsSerializer,
-    TitlesSerializer,
-    UserSerializer,
-    MeSerializer,
-    SignupSerializer,
-    TokenSerializer,
-    CommentsSerializer
+    CategoriesSerializer, GenresSerializer, ReviewsSerializer,
+    TitlesSerializer, UserSerializer, MeSerializer, SignupSerializer,
+    TokenSerializer, CommentsSerializer
 )
-from reviews.models import Categories, Genres, Title, Review
+from reviews.models import Categories, Genres, Title, Review, User
 
-User = get_user_model()
 
 EXCEPTION_MESSAGES = 'Изменение чужого контента запрещено!'
 
@@ -54,8 +44,6 @@ class CheckAuthorMixin(viewsets.ModelViewSet):
 
 
 class UserSignupView(generics.CreateAPIView):
-    """Класс для регистрации и получения confirmation_code."""
-
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
@@ -81,11 +69,6 @@ class UserSignupView(generics.CreateAPIView):
 
 
 class TokenView(generics.CreateAPIView):
-    """
-    Класс для получения токена по средствам
-    предоставления username и confirmation_code.
-    """
-
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
@@ -93,7 +76,7 @@ class TokenView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         username = serializer.validated_data.get('username')
         confirmation_code = serializer.validated_data.get('confirmation_code')
-        user = get_object_or_404(User, username=username)
+        user = generics.get_object_or_404(User, username=username)
         if default_token_generator.check_token(user, confirmation_code):
             return Response(
                 dict(token=str(AccessToken.for_user(user))),
@@ -106,17 +89,13 @@ class TokenView(generics.CreateAPIView):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    """Вьюсет для работы с пользователями"""
     queryset = User.objects.all()
-    filter_backends = (
-        filters.SearchFilter,
-    )
+    filter_backends = (filters.SearchFilter, )
     search_fields = ('username',)
     lookup_field = 'username'
     permission_classes = (AdminOnly,)
     serializer_class = UserSerializer
     pagination_class = PageNumberPagination
-    ordering = ('id',)
 
     def update(self, request, *args, **kwargs):
         if request.method == 'PATCH':
@@ -125,8 +104,6 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class UserMeView(generics.RetrieveUpdateAPIView):
-    """Вьюсет для работы с endpoint'ом users/me."""
-
     serializer_class = MeSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
@@ -153,16 +130,6 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet для работы с моделью Category.
-
-    Доступные HTTP методы:
-
-    - GET;
-    - POST;
-    - DELETE.
-    """
-
     queryset = Categories.objects.all()
     serializer_class = CategoriesSerializer
     pagination_class = PageNumberPagination
@@ -176,16 +143,6 @@ class CategoriesViewSet(viewsets.ModelViewSet):
 
 
 class GenresViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet для работы с моделью Genre.
-
-    Доступные HTTP методы:
-
-    - GET;
-    - POST;
-    - DELETE.
-    """
-
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
     pagination_class = PageNumberPagination
@@ -203,36 +160,25 @@ class GenresViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def destroy(self, request, *args, **kwargs):
-        instance = get_object_or_404(Genres, slug=self.kwargs.get('pk'))
-        self.perform_destroy(instance)
+        self.perform_destroy(generics.get_object_or_404(
+            Genres, slug=self.kwargs.get('pk')
+        ))
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ReviewsViewSet(CheckAuthorMixin):
-    """
-    ViewSet для работы с моделью Genre.
-
-    Доступные HTTP методы:
-
-    - GET;
-    - POST;
-    - PATCH;
-    - DELETE.
-    """
-
     serializer_class = ReviewsSerializer
     permission_classes = (IsAuthorOrReadOnly,)
 
     def get_title(self):
-        """Получает объект произведения."""
-        return get_object_or_404(Title, id=self.kwargs.get('title_id'))
+        return generics.get_object_or_404(
+            Title, id=self.kwargs.get('title_id')
+        )
 
     def get_queryset(self):
-        """Возвращает все обзоры на произведение."""
         return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
-        """Создает обзор на произведение."""
         serializer.save(
             author=self.request.user,
             title=self.get_title()
@@ -245,29 +191,18 @@ class ReviewsViewSet(CheckAuthorMixin):
 
 
 class CommentViewSet(CheckAuthorMixin):
-    """
-    ViewSet для работы с моделью Comment.
-
-    Доступные HTTP методы:
-
-    - GET;
-    - POST;
-    - DELETE.
-    """
-
     serializer_class = CommentsSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get_review(self):
-        """Получает объект ревью"""
-        return get_object_or_404(Review, id=self.kwargs.get('review_id'))
+        return generics.get_object_or_404(
+            Review, id=self.kwargs.get('review_id')
+        )
 
     def get_queryset(self):
-        """Возвращает все комментарии на ревью."""
         return self.get_review().comment.all()
 
     def perform_create(self, serializer):
-        """Создает комментарий на ревью."""
         serializer.save(
             author=self.request.user,
             reviews=self.get_review(),
