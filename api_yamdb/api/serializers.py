@@ -1,6 +1,8 @@
 from datetime import datetime
 
 from rest_framework import serializers, validators
+from rest_framework.exceptions import ValidationError
+from rest_framework.generics import get_object_or_404
 
 from reviews.models import Categories, Genres, Review, Title, User, Comment
 
@@ -159,6 +161,19 @@ class ReviewsSerializer(serializers.ModelSerializer):
         fields = ('id', 'text', 'author', 'score', 'pub_date',)
         model = Review
 
+    def validate(self, data):
+        """Проверяет уникальность обзора."""
+        request = self.context['request']
+        title_id = self.context['view'].kwargs.get('title_id')
+
+        user = request.user
+
+        review = Review.objects.filter(title=title_id, author=user).exists()
+        if review and request.method == 'POST':
+            raise ValidationError('Вы уже оставили отзыв на это произведение')
+
+        return data
+
     def score_validate(self, validated_data):
         """Проверка оценки произведения."""
         minimum_score = 1
@@ -171,6 +186,10 @@ class ReviewsSerializer(serializers.ModelSerializer):
                 f'[{minimum_score}...{maximum_score}]!'
             )
         return score
+
+    def create(self, validated_data):
+        score = self.score_validate(validated_data)
+        return Review.objects.create(**validated_data, score=score)
 
 
 class CommentsSerializer(serializers.ModelSerializer):
