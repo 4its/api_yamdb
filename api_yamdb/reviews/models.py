@@ -143,6 +143,12 @@ class Title(models.Model):
         self.full_clean()
         return super().save(*args, **kwargs)
 
+    def is_admin(self):
+        return self.is_superuser or self.role == self.RoleChoice.admin
+
+    def is_moderator(self):
+        return self.role == self.RoleChoice.moderator
+
     def __str__(self):
         return self.name[:settings.OUTPUT_LENGTH]
 
