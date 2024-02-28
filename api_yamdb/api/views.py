@@ -1,14 +1,15 @@
+from django.conf import settings
 from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
 from django_filters.rest_framework import DjangoFilterBackend
-
 from rest_framework import (
-    filters, viewsets, status, permissions, generics
+    filters, viewsets, status, permissions, generics, views
 )
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.response import Response
+from rest_framework.serializers import ValidationError
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
 
 from .permissions import (
     AdminOrReadOnly, AdminOnly, CategoryPermission, IsAuthorOrReadOnly
@@ -16,7 +17,7 @@ from .permissions import (
 from .filters import GenreCategoryFilter
 from .serializers import (
     CategoriesSerializer, GenresSerializer, ReviewsSerializer,
-    TitlesSerializer, UserSerializer, MeSerializer, SignupSerializer,
+    TitlesSerializer, UserSerializer, UsersProfileSerializer, SignupSerializer,
     TokenSerializer, CommentsSerializer
 )
 from reviews.models import User, Title, Review, Genre, Category, Comment
@@ -43,29 +44,33 @@ class CheckAuthorMixin(viewsets.ModelViewSet):
         super(CheckAuthorMixin, self).perform_destroy(instance)
 
 
-class UserSignupView(generics.CreateAPIView):
+class UserSignupView(views.APIView):
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
-        username = request.data.get('username')
-        email = request.data.get('email')
-        user = User.objects.filter(username=username, email=email).exists()
-        if serializer.is_valid() or user:
-            user, created = User.objects.get_or_create(
-                username=username,
-                email=email,
-            )
-            confirmation_code = default_token_generator.make_token(user)
-            send_mail(
-                'Confirmation Code for Yamdb',
-                f'Your confirmation code is: {confirmation_code}',
-                'registration@yamdb.com',
-                [email],
-                fail_silently=True,
-            )
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        username = serializer.validated_data.get('username')
+        email = serializer.validated_data.get('email')
+        if User.objects.filter(email=email).exclude(
+                username=username).exists():
+            raise ValidationError('Такой email уже зарегистрирован.')
+        if User.objects.filter(username=username).exclude(
+                email=email).exists():
+            raise ValidationError('Такой username уже зарегистрирован.')
+
+        user, created = User.objects.get_or_create(
+            username=username,
+            email=email,
+        )
+        send_mail(
+            'Confirmation Code for Yamdb',
+            f'Your confirmation code is: {user.generate_confirmation_code()}',
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            fail_silently=True,
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class TokenView(generics.CreateAPIView):
@@ -77,7 +82,7 @@ class TokenView(generics.CreateAPIView):
         username = serializer.validated_data.get('username')
         confirmation_code = serializer.validated_data.get('confirmation_code')
         user = generics.get_object_or_404(User, username=username)
-        if default_token_generator.check_token(user, confirmation_code):
+        if user.check_confirmation_code(confirmation_code):
             return Response(
                 dict(token=str(AccessToken.for_user(user))),
                 status=status.HTTP_200_OK
@@ -104,7 +109,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class UserMeView(generics.RetrieveUpdateAPIView):
-    serializer_class = MeSerializer
+    serializer_class = UsersProfileSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_object(self):
