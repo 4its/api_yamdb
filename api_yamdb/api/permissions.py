@@ -14,20 +14,6 @@ class AdminOrReadOnly(permissions.BasePermission):
             return request.user.is_admin
 
 
-class IsAuthorOrReadOnly(permissions.BasePermission):
-    """Разрешает действия с reviews автору, модератору и админу."""
-
-    def has_permission(self, request, view):
-        """Проверяет права пользователя на запрос."""
-        if check_safe_methods(request):
-            return True
-        return request.user.is_authenticated
-
-    def has_object_permission(self, request, view, obj):
-        """Проверяет права пользователя на объект."""
-        return obj.author == request.user or check_safe_methods(request)
-
-
 class AdminOnly(permissions.BasePermission):
 
     def has_permission(self, request, view):
@@ -37,10 +23,18 @@ class AdminOnly(permissions.BasePermission):
         return request.user.is_admin
 
 
-class IsAdminOrModerator(permissions.BasePermission):
+class IsAuthorAdminModeratorOrReadOnly(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        if check_safe_methods(request):
+            return True
+        return request.user.is_authenticated
+
     def has_object_permission(self, request, view, obj):
+        if check_safe_methods(request):
+            return True
         return (
-                check_safe_methods(request)
+                request.user.is_authenticated
                 or obj.author == request.user
                 or request.user.is_admin
                 or request.user.is_moderator

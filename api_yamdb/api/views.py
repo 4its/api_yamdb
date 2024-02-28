@@ -12,7 +12,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from .permissions import (
-    AdminOrReadOnly, IsAuthorOrReadOnly, IsAdminOrModerator, AdminOnly
+    AdminOrReadOnly, IsAuthorAdminModeratorOrReadOnly, AdminOnly
 )
 from .filters import GenreCategoryFilter
 from .serializers import (
@@ -179,7 +179,7 @@ class GenresViewSet(viewsets.ModelViewSet):
 
 class ReviewsViewSet(CheckAuthorMixin):
     serializer_class = ReviewsSerializer
-    permission_classes = (IsAdminOrModerator,)
+    permission_classes = (IsAuthorAdminModeratorOrReadOnly,)
 
     def get_title(self):
         return generics.get_object_or_404(
