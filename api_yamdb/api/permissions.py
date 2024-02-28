@@ -46,9 +46,8 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
         """Проверяет права пользователя на объект."""
         if request.method in permissions.SAFE_METHODS:
             return True
-
         return (
-                obj.author == request.user or
-                request.user.is_staff or
-                request.user.role in ['moderator', 'admin']
+            obj.author == request.user
+            or request.user.is_staff
+            or request.user.role in ['moderator', 'admin']
         )
