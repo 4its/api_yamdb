@@ -1,77 +1,52 @@
 from datetime import datetime
 
+from django.conf import settings
 from django.db.models import Avg
 from rest_framework import serializers, validators
 from rest_framework.exceptions import ValidationError
 
-from reviews.models import User, Title, Review, Genre, Category, Comment
-
-USER_FIELDS_VALIDATOR = (
-    validators.UniqueValidator(
-        queryset=User.objects.all()
-    ),
+from reviews.models import (
+    User, Title, Review, Genre, Category, Comment
 )
+from reviews.validators import validate_username
 
 
-class SignupSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = User
-        fields = ('username', 'email',)
-
-    # def validate_username(self, username):
-    #     if username.lower() == 'me':
-    #         raise serializers.ValidationError("Name 'me' reserved by system")
-    #     return username
+class SignupSerializer(serializers.Serializer):
+    username = serializers.CharField(
+        max_length=settings.STANDARD_FIELD_LENGTH,
+        validators=(validate_username,)
+    )
+    email = serializers.EmailField(
+        max_length=settings.EMAIL_FIELD_LENGTH
+    )
 
 
-class TokenSerializer(serializers.ModelSerializer):
-    # username = serializers.RegexField(
-    #     regex=r'^[\w.@+-]+\Z',
-    #     # max_length=User.USERNAME_LENGTH,
-    # )
-    # confirmation_code = serializers.CharField()
-
-    class Meta:
-        model = User
-        fields = ('username', 'confirmation_code')
+class TokenSerializer(serializers.Serializer):
+    username = serializers.CharField(
+        max_length=settings.STANDARD_FIELD_LENGTH,
+        validators=(validate_username,)
+    )
+    confirmation_code = serializers.CharField()
 
 
-class UserSerializer(serializers.ModelSerializer):
-    # username = serializers.RegexField(
-    #     regex=r'^[\w.@+-]+\Z',
-    #     # max_length=User.USERNAME_LENGTH,
-    #     required=True,
-    #     # validators=USER_FIELDS_VALIDATOR
-    # )
-    # email = serializers.EmailField(
-    #     required=True,
-    #     # max_length=User.EMAIL_FIELD_LENGTH,
-    #     # validators=USER_FIELDS_VALIDATOR
-    # )
-
+class BaseUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role',
         )
 
-    def validate_username(self, username):
-        if username.lower() == 'me':
-            raise serializers.ValidationError("Name 'me' reserved by system")
-        return username
 
-    def create(self, validated_data):
-        return User.objects.create(**validated_data)
+class UserSerializer(BaseUserSerializer):
+    username = serializers.CharField(
+        max_length=settings.STANDARD_FIELD_LENGTH,
+        validators=(validate_username,)
+    )
 
 
-class MeSerializer(serializers.ModelSerializer):
+class UsersProfileSerializer(BaseUserSerializer):
 
     class Meta:
-        model = User
-        fields = (
-            'username', 'email', 'first_name', 'last_name', 'bio', 'role',
-        )
         read_only_fields = ('id', 'role',)
 
 
