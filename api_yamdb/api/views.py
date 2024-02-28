@@ -12,7 +12,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from .permissions import (
-    AdminOrReadOnly, AdminOnly, CategoryPermission, IsAuthorOrReadOnly
+    AdminOrReadOnly, IsAuthorOrReadOnly, IsAdminOrModerator, AdminOnly
 )
 from .filters import GenreCategoryFilter
 from .serializers import (
@@ -98,7 +98,7 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter, )
     search_fields = ('username',)
     lookup_field = 'username'
-    permission_classes = (AdminOnly,)
+    permission_classes = (permissions.IsAuthenticated, AdminOnly)
     serializer_class = UserSerializer
     pagination_class = PageNumberPagination
 
@@ -138,7 +138,7 @@ class CategoriesViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
     pagination_class = PageNumberPagination
-    permission_classes = (CategoryPermission,)
+    permission_classes = (AdminOrReadOnly,)
     filter_backends = (
         DjangoFilterBackend,
         filters.SearchFilter,
@@ -146,12 +146,18 @@ class CategoriesViewSet(viewsets.ModelViewSet):
     search_fields = ('name',)
     lookup_field = 'slug'
 
+    def retrieve(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def update(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
 
 class GenresViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenresSerializer
     pagination_class = PageNumberPagination
-    permission_classes = (CategoryPermission,)
+    permission_classes = (AdminOrReadOnly,)
     filter_backends = (
         DjangoFilterBackend,
         filters.SearchFilter,
@@ -173,7 +179,7 @@ class GenresViewSet(viewsets.ModelViewSet):
 
 class ReviewsViewSet(CheckAuthorMixin):
     serializer_class = ReviewsSerializer
-    permission_classes = (IsAuthorOrReadOnly,)
+    permission_classes = (IsAdminOrModerator,)
 
     def get_title(self):
         return generics.get_object_or_404(

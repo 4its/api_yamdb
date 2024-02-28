@@ -105,6 +105,14 @@ class User(AbstractUser):
     def check_confirmation_code(self, confirmation_code):
         return self.confirmation_code == self.hash_value(confirmation_code)
 
+    @property
+    def is_admin(self):
+        return self.is_superuser or self.role == self.RoleChoice.admin
+
+    @property
+    def is_moderator(self):
+        return self.role == self.RoleChoice.moderator
+
     def __str__(self):
         return self.username[:settings.OUTPUT_LENGTH]
 
@@ -142,12 +150,6 @@ class Title(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         return super().save(*args, **kwargs)
-
-    def is_admin(self):
-        return self.is_superuser or self.role == self.RoleChoice.admin
-
-    def is_moderator(self):
-        return self.role == self.RoleChoice.moderator
 
     def __str__(self):
         return self.name[:settings.OUTPUT_LENGTH]
