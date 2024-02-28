@@ -22,6 +22,9 @@ class BaseCategoryGenre(models.Model):
         verbose_name='Слаг'
     )
 
+    class Meta:
+        abstract = True
+
     def __str__(self):
         return self.name[:settings.OUTPUT_LENGTH]
 
@@ -33,6 +36,9 @@ class BaseReviewComment(models.Model):
         verbose_name='Дата публикации',
         auto_now_add=True
     )
+
+    class Meta:
+        abstract = True
 
     def __str__(self):
         return self.text[:settings.OUTPUT_LENGTH]
@@ -189,6 +195,12 @@ class Review(BaseReviewComment):
         verbose_name = 'Отзыв'
         verbose_name_plural = 'отзывы'
         default_related_name = 'reviews'
+        constraints = (
+            models.UniqueConstraint(
+                fields=('title', 'author'),
+                name='unique_review_for_user'
+            ),
+        )
         ordering = ('title',)
 
     def clean(self):
