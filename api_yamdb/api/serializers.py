@@ -4,7 +4,7 @@ from django.db.models import Avg
 from rest_framework import serializers, validators
 from rest_framework.exceptions import ValidationError
 
-from reviews.models import Categories, Genres, Review, Title, User, Comment
+from reviews.models import User, Title, Review, Genre, Category, Comment
 
 USER_FIELDS_VALIDATOR = (
     validators.UniqueValidator(
@@ -19,18 +19,18 @@ class SignupSerializer(serializers.ModelSerializer):
         model = User
         fields = ('username', 'email',)
 
-    def validate_username(self, username):
-        if username.lower() == 'me':
-            raise serializers.ValidationError("Name 'me' reserved by system")
-        return username
+    # def validate_username(self, username):
+    #     if username.lower() == 'me':
+    #         raise serializers.ValidationError("Name 'me' reserved by system")
+    #     return username
 
 
 class TokenSerializer(serializers.ModelSerializer):
-    username = serializers.RegexField(
-        regex=r'^[\w.@+-]+\Z',
-        max_length=User.USERNAME_LENGTH,
-    )
-    confirmation_code = serializers.CharField()
+    # username = serializers.RegexField(
+    #     regex=r'^[\w.@+-]+\Z',
+    #     # max_length=User.USERNAME_LENGTH,
+    # )
+    # confirmation_code = serializers.CharField()
 
     class Meta:
         model = User
@@ -38,17 +38,17 @@ class TokenSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    username = serializers.RegexField(
-        regex=r'^[\w.@+-]+\Z',
-        max_length=User.USERNAME_LENGTH,
-        required=True,
-        validators=USER_FIELDS_VALIDATOR
-    )
-    email = serializers.EmailField(
-        required=True,
-        max_length=User.EMAIL_FIELD_LENGTH,
-        validators=USER_FIELDS_VALIDATOR
-    )
+    # username = serializers.RegexField(
+    #     regex=r'^[\w.@+-]+\Z',
+    #     # max_length=User.USERNAME_LENGTH,
+    #     required=True,
+    #     # validators=USER_FIELDS_VALIDATOR
+    # )
+    # email = serializers.EmailField(
+    #     required=True,
+    #     # max_length=User.EMAIL_FIELD_LENGTH,
+    #     # validators=USER_FIELDS_VALIDATOR
+    # )
 
     class Meta:
         model = User
@@ -79,25 +79,25 @@ class CategoriesSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = ('name', 'slug',)
-        model = Categories
+        model = Category
 
 
 class GenresSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = ('name', 'slug',)
-        model = Genres
+        model = Genre
 
 
 class TitlesSerializer(serializers.ModelSerializer):
     genre = serializers.SlugRelatedField(
         slug_field='slug',
-        queryset=Genres.objects.all(),
+        queryset=Genre.objects.all(),
         many=True
     )
     category = serializers.SlugRelatedField(
         slug_field='slug',
-        queryset=Categories.objects.all()
+        queryset=Category.objects.all()
     )
     rating = serializers.SerializerMethodField()
 
@@ -130,14 +130,6 @@ class TitlesSerializer(serializers.ModelSerializer):
         title.save()
         return title
 
-    def validate_year(self, year):
-        current_year = datetime.now().year
-        if year > current_year:
-            raise serializers.ValidationError(
-                f'Год выпуска произведения больше {current_year}!'
-            )
-        return year
-
 
 class ReviewsSerializer(serializers.ModelSerializer):
 
@@ -158,22 +150,6 @@ class ReviewsSerializer(serializers.ModelSerializer):
         if review and request.method == 'POST':
             raise ValidationError('Вы уже оставили отзыв на это произведение')
         return data
-
-    def score_validate(self, validated_data):
-        """Проверка оценки произведения."""
-        minimum_score = 1
-        maximum_score = 10
-        score = validated_data.pop('score')
-        if not minimum_score <= score <= maximum_score:
-            raise serializers.ValidationError(
-                f'Величина оценки вне диапазона '
-                f'[{minimum_score}...{maximum_score}]!'
-            )
-        return score
-
-    def create(self, validated_data):
-        score = self.score_validate(validated_data)
-        return Review.objects.create(**validated_data, score=score)
 
 
 class CommentsSerializer(serializers.ModelSerializer):
