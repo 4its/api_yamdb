@@ -46,7 +46,7 @@ class UserSerializer(BaseUserSerializer):
 
 class UsersProfileSerializer(BaseUserSerializer):
 
-    class Meta:
+    class Meta(BaseUserSerializer.Meta):
         read_only_fields = ('id', 'role',)
 
 
