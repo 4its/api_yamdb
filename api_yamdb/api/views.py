@@ -26,24 +26,6 @@ from reviews.models import User, Title, Review, Genre, Category, Comment
 EXCEPTION_MESSAGES = 'Изменение чужого контента запрещено!'
 
 
-class CheckAuthorMixin(viewsets.ModelViewSet):
-    def perform_update(self, serializer):
-        if (
-                (serializer.instance.author != self.request.user)
-                & (self.request.user.role not in ('admin', 'moderator'))
-        ):
-            raise PermissionDenied(EXCEPTION_MESSAGES)
-        super(CheckAuthorMixin, self).perform_update(serializer)
-
-    def perform_destroy(self, instance):
-        if (
-                (instance.author != self.request.user)
-                & (self.request.user.role not in ('admin', 'moderator'))
-        ):
-            raise PermissionDenied(EXCEPTION_MESSAGES)
-        super(CheckAuthorMixin, self).perform_destroy(instance)
-
-
 class UserSignupView(views.APIView):
     permission_classes = (permissions.AllowAny,)
 
@@ -102,11 +84,6 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     pagination_class = PageNumberPagination
 
-    def update(self, request, *args, **kwargs):
-        if request.method == 'PATCH':
-            return super().update(request, *args, **kwargs)
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
 
 class UserMeView(generics.RetrieveUpdateAPIView):
     serializer_class = UsersProfileSerializer
@@ -128,11 +105,6 @@ class TitleViewSet(viewsets.ModelViewSet):
     )
     filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
 
-    def update(self, request, *args, **kwargs):
-        if request.method == 'PATCH':
-            return super().update(request, *args, **kwargs)
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
 
 class CategoriesViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
@@ -146,12 +118,6 @@ class CategoriesViewSet(viewsets.ModelViewSet):
     search_fields = ('name',)
     lookup_field = 'slug'
 
-    def retrieve(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def update(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
 
 class GenresViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
@@ -164,20 +130,8 @@ class GenresViewSet(viewsets.ModelViewSet):
     )
     search_fields = ('name',)
 
-    def retrieve(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    def update(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def destroy(self, request, *args, **kwargs):
-        self.perform_destroy(generics.get_object_or_404(
-            Genre, slug=self.kwargs.get('pk')
-        ))
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class ReviewsViewSet(CheckAuthorMixin):
+class ReviewsViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewsSerializer
     permission_classes = (IsAuthorAdminModeratorOrReadOnly,)
 
@@ -195,13 +149,8 @@ class ReviewsViewSet(CheckAuthorMixin):
             title=self.get_title()
         )
 
-    def update(self, request, *args, **kwargs):
-        if request.method == 'PATCH':
-            return super().update(request, *args, **kwargs)
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-
-class CommentViewSet(CheckAuthorMixin):
+class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentsSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
@@ -218,8 +167,3 @@ class CommentViewSet(CheckAuthorMixin):
             author=self.request.user,
             review=self.get_review(),
         )
-
-    def update(self, request, *args, **kwargs):
-        if request.method == 'PATCH':
-            return super().update(request, *args, **kwargs)
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
