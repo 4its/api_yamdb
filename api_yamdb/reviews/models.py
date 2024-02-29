@@ -6,12 +6,12 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 from .validators import validate_username
 
 
 class BaseCategoryGenre(models.Model):
-
     name = models.TextField(
         max_length=settings.NAME_FIELD_LENGTH,
         verbose_name='Имя'
@@ -45,7 +45,6 @@ class BaseReviewComment(models.Model):
 
 
 class User(AbstractUser):
-
     class RoleChoice(models.TextChoices):
         user = 'user', 'Пользователь'
         moderator = 'moderator', 'Модератор'
@@ -130,7 +129,7 @@ class Title(models.Model):
         max_length=settings.NAME_FIELD_LENGTH,
         verbose_name='Название',
     )
-    year = models.IntegerField(verbose_name='Год выпуска',)
+    year = models.IntegerField(verbose_name='Год выпуска', )
     description = models.TextField(
         verbose_name='Описание',
         blank=True)
@@ -184,14 +183,25 @@ class Genre(BaseCategoryGenre):
 
 
 class Review(BaseReviewComment):
-
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
         related_name='reviews',
         verbose_name='Обзор'
     )
-    score = models.SmallIntegerField(verbose_name='Оценка')
+    score = models.SmallIntegerField(
+        verbose_name='Оценка',
+        validators=(
+            MinValueValidator(
+                settings.MINIMUM_SCORE,
+                f'Значение должно быть больше {settings.MINIMUM_SCORE}'
+            ),
+            MaxValueValidator(
+                settings.MAXIMUM_SCORE,
+                f'Значение должно быть меньше {settings.MAXIMUM_SCORE}'
+            ),
+        ),
+    )
 
     class Meta:
         verbose_name = 'Отзыв'
@@ -205,20 +215,8 @@ class Review(BaseReviewComment):
         )
         ordering = ('title',)
 
-    def clean(self):
-        if not (settings.MINIMUM_SCORE <= self.score <= settings.MAXIMUM_SCORE):
-            raise ValidationError(
-                f'Величина оценки вне диапазона '
-                f'[{settings.MINIMUM_SCORE}...{settings.MAXIMUM_SCORE}]!'
-            )
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        return super().save(*args, **kwargs)
-
 
 class Comment(BaseReviewComment):
-
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
