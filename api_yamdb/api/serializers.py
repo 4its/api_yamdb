@@ -38,10 +38,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(BaseUserSerializer):
-    username = serializers.CharField(
-        max_length=settings.STANDARD_FIELD_LENGTH,
-        validators=(validate_username,)
-    )
+    pass
 
 
 class UsersProfileSerializer(BaseUserSerializer):
