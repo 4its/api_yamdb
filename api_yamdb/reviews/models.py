@@ -122,6 +122,26 @@ class User(AbstractUser):
         return self.username[:settings.OUTPUT_LENGTH]
 
 
+class Category(BaseCategoryGenre):
+    """Модель для категорий."""
+
+    class Meta:
+        verbose_name = 'Категория'
+        verbose_name_plural = 'категории'
+        default_related_name = 'categories'
+        ordering = ('name',)
+
+
+class Genre(BaseCategoryGenre):
+    """Модель для жанра."""
+
+    class Meta:
+        verbose_name = 'Жанр'
+        verbose_name_plural = 'жанры'
+        default_related_name = 'genres'
+        ordering = ('name',)
+
+
 class Title(models.Model):
     """Модель для произведений."""
 
@@ -133,9 +153,11 @@ class Title(models.Model):
     description = models.TextField(
         verbose_name='Описание',
         blank=True)
-    genre = models.ManyToManyField('Genre')
+    genre = models.ManyToManyField(
+        Genre,
+    )
     category = models.ForeignKey(
-        'Category',
+        Category,
         on_delete=models.SET_NULL,
         null=True
     )
@@ -160,26 +182,6 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name[:settings.OUTPUT_LENGTH]
-
-
-class Category(BaseCategoryGenre):
-    """Модель для категорий."""
-
-    class Meta:
-        verbose_name = 'Категория'
-        verbose_name_plural = 'категории'
-        default_related_name = 'categories'
-        ordering = ('name',)
-
-
-class Genre(BaseCategoryGenre):
-    """Модель для жанра."""
-
-    class Meta:
-        verbose_name = 'Жанр'
-        verbose_name_plural = 'жанры'
-        default_related_name = 'genres'
-        ordering = ('name',)
 
 
 class Review(BaseReviewComment):
