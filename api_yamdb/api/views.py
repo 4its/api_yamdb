@@ -1,11 +1,10 @@
 from django.conf import settings
 from django.core.mail import send_mail
-from django.contrib.auth.tokens import default_token_generator
+from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (
     filters, viewsets, status, permissions, generics, views, mixins
 )
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.serializers import ValidationError
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.pagination import PageNumberPagination
@@ -95,7 +94,7 @@ class UserMeView(generics.RetrieveUpdateAPIView):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
+    queryset = Title.objects.annotate(rating=Avg('reviews__score')).all()
     serializer_class = TitlesSerializer
     pagination_class = PageNumberPagination
     permission_classes = (IsAdminOrReadOnly,)
