@@ -3,7 +3,7 @@ from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (
-    filters, viewsets, status, permissions, generics, views
+    filters, viewsets, status, permissions, generics, views, mixins
 )
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.serializers import ValidationError
@@ -12,7 +12,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from .permissions import (
-    AdminOrReadOnly, IsAuthorAdminModeratorOrReadOnly, AdminOnly
+    IsAdminOrReadOnly, IsAuthorAdminModeratorOrReadOnly, AdminOnly
 )
 from .filters import GenreCategoryFilter
 from .serializers import (
@@ -77,6 +77,7 @@ class TokenView(generics.CreateAPIView):
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
+    http_method_names = ('get', 'post', 'patch', 'delete')
     filter_backends = (filters.SearchFilter, )
     search_fields = ('username',)
     lookup_field = 'username'
@@ -97,7 +98,8 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitlesSerializer
     pagination_class = PageNumberPagination
-    permission_classes = (AdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
+    http_method_names = ('get', 'post', 'patch', 'delete')
     filter_backends = (
         DjangoFilterBackend,
         filters.OrderingFilter,
@@ -106,11 +108,14 @@ class TitleViewSet(viewsets.ModelViewSet):
     filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
 
 
-class CategoriesViewSet(viewsets.ModelViewSet):
+class CategoriesViewSet(
+    mixins.CreateModelMixin, mixins.ListModelMixin,
+    mixins.DestroyModelMixin, viewsets.GenericViewSet
+):
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
     pagination_class = PageNumberPagination
-    permission_classes = (AdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (
         DjangoFilterBackend,
         filters.SearchFilter,
@@ -119,21 +124,26 @@ class CategoriesViewSet(viewsets.ModelViewSet):
     lookup_field = 'slug'
 
 
-class GenresViewSet(viewsets.ModelViewSet):
+class GenresViewSet(
+    mixins.CreateModelMixin, mixins.ListModelMixin,
+    mixins.DestroyModelMixin, viewsets.GenericViewSet
+):
     queryset = Genre.objects.all()
     serializer_class = GenresSerializer
     pagination_class = PageNumberPagination
-    permission_classes = (AdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (
         DjangoFilterBackend,
         filters.SearchFilter,
     )
     search_fields = ('name',)
+    lookup_field = 'slug'
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewsSerializer
     permission_classes = (IsAuthorAdminModeratorOrReadOnly,)
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_title(self):
         return generics.get_object_or_404(
@@ -152,7 +162,8 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentsSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsAuthorAdminModeratorOrReadOnly,)
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_review(self):
         return generics.get_object_or_404(
