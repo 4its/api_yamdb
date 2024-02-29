@@ -155,6 +155,7 @@ class Title(models.Model):
         blank=True)
     genre = models.ManyToManyField(
         Genre,
+        through='GenreTitle'
     )
     category = models.ForeignKey(
         Category,
@@ -183,6 +184,19 @@ class Title(models.Model):
     def __str__(self):
         return self.name[:settings.OUTPUT_LENGTH]
 
+
+class GenreTitle(models.Model):
+    genre = models.ForeignKey(
+        Genre,
+        on_delete=models.CASCADE
+    )
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE
+    )
+
+    def __str__(self):
+        return self.genre[:settings.OUTPUT_LENGTH]
 
 class Review(BaseReviewComment):
     title = models.ForeignKey(
