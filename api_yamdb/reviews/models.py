@@ -131,7 +131,9 @@ class Title(models.Model):
         verbose_name='Название',
     )
     year = models.IntegerField(verbose_name='Год выпуска',)
-    description = models.TextField(verbose_name='Описание')
+    description = models.TextField(
+        verbose_name='Описание',
+        blank=True)
     genre = models.ManyToManyField('Genre')
     category = models.ForeignKey(
         'Category',
