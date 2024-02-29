@@ -1,40 +1,32 @@
-import re
+import random
+import hashlib
 from datetime import datetime
 
 from django.db import models
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
-from django.core.validators import RegexValidator
-from django.template.defaultfilters import truncatechars, truncatewords
 
 from .validators import validate_username
-
-
-WORDS_ON_TEXT = 10      # TODO Подумать, нужно ли...
-RESERVED_USERNAMES = ('me',)
-STANDARD_FIELD_LENGTH = 150
-NAME_FIELD_LENGTH = 256
-SLUG_FIELD_LENGTH = 50
-EMAIL_FIELD_LENGTH = 254
-MINIMUM_SCORE = 1
-MAXIMUM_SCORE = 10
-OUTPUT_LENGTH = 25
 
 
 class BaseCategoryGenre(models.Model):
 
     name = models.TextField(
-        max_length=NAME_FIELD_LENGTH,
+        max_length=settings.NAME_FIELD_LENGTH,
         verbose_name='Имя'
     )
     slug = models.SlugField(
-        max_length=SLUG_FIELD_LENGTH,
+        max_length=settings.SLUG_FIELD_LENGTH,
         unique=True,
         verbose_name='Слаг'
     )
 
+    class Meta:
+        abstract = True
+
     def __str__(self):
-        return self.name[:OUTPUT_LENGTH]
+        return self.name[:settings.OUTPUT_LENGTH]
 
 
 class BaseReviewComment(models.Model):
@@ -45,8 +37,11 @@ class BaseReviewComment(models.Model):
         auto_now_add=True
     )
 
+    class Meta:
+        abstract = True
+
     def __str__(self):
-        return self.text[:OUTPUT_LENGTH]
+        return self.text[:settings.OUTPUT_LENGTH]
 
 
 class User(AbstractUser):
@@ -58,23 +53,23 @@ class User(AbstractUser):
 
     username = models.CharField(
         verbose_name='Имя пользователя',
-        max_length=STANDARD_FIELD_LENGTH,
+        max_length=settings.STANDARD_FIELD_LENGTH,
         unique=True,
         validators=(validate_username,)
     )
     email = models.EmailField(
         verbose_name='Эл.почта',
+        max_length=settings.EMAIL_FIELD_LENGTH,
         unique=True,
-        max_length=EMAIL_FIELD_LENGTH,
     )
     first_name = models.CharField(
         verbose_name='Имя',
-        max_length=STANDARD_FIELD_LENGTH,
+        max_length=settings.STANDARD_FIELD_LENGTH,
         blank=True
     )
     last_name = models.CharField(
         verbose_name='Фамилия',
-        max_length=STANDARD_FIELD_LENGTH,
+        max_length=settings.STANDARD_FIELD_LENGTH,
         blank=True
     )
     bio = models.TextField(
@@ -88,6 +83,11 @@ class User(AbstractUser):
         default=RoleChoice.user,
         max_length=max(len(choice) for choice in RoleChoice.__dict__),
     )
+    confirmation_code = models.CharField(
+        verbose_name='Пинкод',
+        max_length=128,
+        default='None',
+    )
 
     class Meta:
         verbose_name = 'Пользователи'
@@ -95,15 +95,39 @@ class User(AbstractUser):
         default_related_name = 'users'
         ordering = ('username',)
 
+    @classmethod
+    def hash_value(cls, value):
+        return hashlib.sha256(value.encode()).hexdigest()
+
+    def generate_confirmation_code(self):
+        confirmation_code = ''.join(random.choices(
+            settings.PINCODE_CHARS,
+            k=settings.PINCODE_LENGTH
+        ))
+        self.confirmation_code = self.hash_value(confirmation_code)
+        self.save()
+        return confirmation_code
+
+    def check_confirmation_code(self, confirmation_code):
+        return self.confirmation_code == self.hash_value(confirmation_code)
+
+    @property
+    def is_admin(self):
+        return self.is_superuser or self.role == self.RoleChoice.admin
+
+    @property
+    def is_moderator(self):
+        return self.role == self.RoleChoice.moderator
+
     def __str__(self):
-        return self.username[:OUTPUT_LENGTH]
+        return self.username[:settings.OUTPUT_LENGTH]
 
 
 class Title(models.Model):
     """Модель для произведений."""
 
     name = models.CharField(
-        max_length=NAME_FIELD_LENGTH,
+        max_length=settings.NAME_FIELD_LENGTH,
         verbose_name='Название',
     )
     year = models.IntegerField(verbose_name='Год выпуска',)
@@ -136,7 +160,7 @@ class Title(models.Model):
         return super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.name[:OUTPUT_LENGTH]
+        return self.name[:settings.OUTPUT_LENGTH]
 
 
 class Category(BaseCategoryGenre):
@@ -173,19 +197,19 @@ class Review(BaseReviewComment):
         verbose_name = 'Отзыв'
         verbose_name_plural = 'отзывы'
         default_related_name = 'reviews'
+        constraints = (
+            models.UniqueConstraint(
+                fields=('title', 'author'),
+                name='unique_review_for_user'
+            ),
+        )
         ordering = ('title',)
-        # constraints = (
-        #     models.UniqueConstraint(
-        #         fields=('title', 'author'),
-        #         name='unique_review'
-        #     ),
-        # )
 
     def clean(self):
-        if not MINIMUM_SCORE <= self.score <= MAXIMUM_SCORE:
+        if not (settings.MINIMUM_SCORE <= self.score <= settings.MAXIMUM_SCORE):
             raise ValidationError(
                 f'Величина оценки вне диапазона '
-                f'[{MINIMUM_SCORE}...{MAXIMUM_SCORE}]!'
+                f'[{settings.MINIMUM_SCORE}...{settings.MAXIMUM_SCORE}]!'
             )
 
     def save(self, *args, **kwargs):
