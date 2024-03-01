@@ -20,6 +20,8 @@
 * Ресурс **reviews**: отзывы на произведения. Отзыв привязан к определённому произведению.
 * Ресурс **comments**: комментарии к отзывам. Комментарий привязан к определённому отзыву.
 
+Подробнее с эндпойнтами, можно ознакомится по адресу http://127.0.0.1/redoc/ после запуску проекта.
+
 ## Пользовательские права доступа
 * **Аноним** — может просматривать описания произведений, читать отзывы и комментарии.
 * **Аутентифицированный пользователь** (user) — может читать всё, как и Аноним, может публиковать отзывы и ставить оценки произведениям (фильмам/книгам/песенкам), может комментировать отзывы; может редактировать и удалять свои отзывы и комментарии, редактировать свои оценки произведений. Эта роль присваивается по умолчанию каждому новому пользователю.
@@ -37,8 +39,6 @@ _**NOTE:**_ **Суперюзер Django** всегда обладает прав
 
 
 ## Разворачивание проекта
-
-
 
 * Клонируем репозиторий и переходим в созданную папку:
     ```bash
@@ -59,10 +59,22 @@ _**NOTE:**_ **Суперюзер Django** всегда обладает прав
     pip install --upgrade pip
     ```
 
-* Создать и выполнить миграции:
+*  Выполнить миграции:
     ```bash
-    python3 manage.py makemigrations && python3 manage.py migrate
+    python3 manage.py migrate
     ```
 * Запустить проект:
   ```bash
   python3 manage.py runserver
+  ```
+
+### Сэк используемых технологий
+ * [Python 3.9](https://www.python.org/downloads/release/python-390/)
+ * [Django 3.2](https://docs.djangoproject.com/en/5.0/releases/3.2/) 
+ * [Simplejwt 5.3.1](https://django-rest-framework-simplejwt.readthedocs.io/en/latest/getting_started.html)
+ * [DRF 3.12.4](https://www.django-rest-framework.org/community/release-notes/#3124)
+
+### Список разработчиков проекта:
+* [**Nikita Goncharov**](https://github.com/ARLIKIN)
+* [**Sergey Kulbida**](https://github.com/SergeyKDEV) 
+* [**Goerge Egiazaryan**](https://github.com/4its/)

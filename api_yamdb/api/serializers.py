@@ -1,13 +1,8 @@
-from datetime import datetime
-
 from django.conf import settings
-from django.db.models import Avg
-from rest_framework import serializers, validators
+from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from reviews.models import (
-    User, Title, Review, Genre, Category, Comment
-)
+from reviews.models import Category, Comment, Genre, Review, Title, User
 from reviews.validators import validate_username
 
 
@@ -38,10 +33,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(BaseUserSerializer):
-    username = serializers.CharField(
-        max_length=settings.STANDARD_FIELD_LENGTH,
-        validators=(validate_username,)
-    )
+    pass
 
 
 class UsersProfileSerializer(BaseUserSerializer):
@@ -74,17 +66,14 @@ class TitlesSerializer(serializers.ModelSerializer):
         slug_field='slug',
         queryset=Category.objects.all()
     )
-    rating = serializers.SerializerMethodField()
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Title
         fields = (
             'id', 'name', 'year', 'rating', 'description', 'genre', 'category',
         )
-
-    def get_rating(self, obj):
-        num = Review.objects.filter().aggregate(avg_value=Avg('score'))
-        return num['avg_value']
+        read_only_fields = ('rating',)
 
     def to_representation(self, instance):
         """Представление данных модели Titles при GET запросе."""

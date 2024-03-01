@@ -4,6 +4,7 @@ from csv import DictReader
 from django.conf import settings
 from django.core.management import BaseCommand
 from django.db import transaction
+
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
 FILES_PATH = settings.STATIC_URL.strip('/') + '/data/'
