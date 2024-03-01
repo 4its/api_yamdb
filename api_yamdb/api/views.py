@@ -2,25 +2,22 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import (
-    filters, viewsets, status, permissions, generics, views, mixins
-)
-from rest_framework.serializers import ValidationError
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework import (filters, generics, mixins, permissions, status,
+                            views, viewsets)
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
+from rest_framework.serializers import ValidationError
+from rest_framework_simplejwt.tokens import AccessToken
 
-from .permissions import (
-    IsAdminOrReadOnly, IsAuthorAdminModeratorOrReadOnly, AdminOnly
-)
+from reviews.models import Category, Genre, Review, Title, User
+
 from .filters import GenreCategoryFilter
-from .serializers import (
-    CategoriesSerializer, GenresSerializer, ReviewsSerializer,
-    TitlesSerializer, UserSerializer, UsersProfileSerializer, SignupSerializer,
-    TokenSerializer, CommentsSerializer
-)
-from reviews.models import User, Title, Review, Genre, Category, Comment
-
+from .permissions import (AdminOnly, IsAdminOrReadOnly,
+                          IsAuthorAdminModeratorOrReadOnly)
+from .serializers import (CategoriesSerializer, CommentsSerializer,
+                          GenresSerializer, ReviewsSerializer,
+                          SignupSerializer, TitlesSerializer, TokenSerializer,
+                          UserSerializer, UsersProfileSerializer)
 
 EXCEPTION_MESSAGES = 'Изменение чужого контента запрещено!'
 
@@ -77,10 +74,10 @@ class TokenView(generics.CreateAPIView):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     http_method_names = ('get', 'post', 'patch', 'delete')
-    filter_backends = (filters.SearchFilter, )
+    filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
     lookup_field = 'username'
-    permission_classes = (permissions.IsAuthenticated, AdminOnly)
+    permission_classes = (permissions.IsAuthenticated, AdminOnly,)
     serializer_class = UserSerializer
     pagination_class = PageNumberPagination
 
@@ -98,13 +95,13 @@ class TitleViewSet(viewsets.ModelViewSet):
     serializer_class = TitlesSerializer
     pagination_class = PageNumberPagination
     permission_classes = (IsAdminOrReadOnly,)
-    http_method_names = ('get', 'post', 'patch', 'delete')
+    http_method_names = ('get', 'post', 'patch', 'delete',)
     filter_backends = (
         DjangoFilterBackend,
         filters.OrderingFilter,
-        GenreCategoryFilter
+        GenreCategoryFilter,
     )
-    filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
+    filterset_fields = ('category__slug', 'genre__slug', 'name', 'year',)
 
 
 class CategoriesViewSet(
@@ -142,7 +139,7 @@ class GenresViewSet(
 class ReviewsViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewsSerializer
     permission_classes = (IsAuthorAdminModeratorOrReadOnly,)
-    http_method_names = ('get', 'post', 'patch', 'delete')
+    http_method_names = ('get', 'post', 'patch', 'delete',)
 
     def get_title(self):
         return generics.get_object_or_404(
@@ -162,7 +159,7 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentsSerializer
     permission_classes = (IsAuthorAdminModeratorOrReadOnly,)
-    http_method_names = ('get', 'post', 'patch', 'delete')
+    http_method_names = ('get', 'post', 'patch', 'delete',)
 
     def get_review(self):
         return generics.get_object_or_404(

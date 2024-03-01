@@ -5,16 +5,8 @@ from django.conf import settings
 from django.core.management import BaseCommand
 from django.db import IntegrityError
 
-
-from reviews.models import (
-    User,
-    Category,
-    Comment,
-    Genre,
-    GenreTitle,
-    Review,
-    Title
-)
+from reviews.models import (Category, Comment, Genre, GenreTitle, Review,
+                            Title, User)
 
 CSV_FILES_DIR = os.path.join(settings.BASE_DIR, 'static/data/')
 

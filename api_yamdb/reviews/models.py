@@ -1,12 +1,12 @@
-import random
 import hashlib
+import random
 from datetime import datetime
 
-from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
 
 from .validators import validate_username
 
@@ -167,7 +167,7 @@ class Title(models.Model):
         verbose_name = 'Произведение'
         verbose_name_plural = 'произведение'
         default_related_name = 'titles'
-        ordering = ('year', 'name')
+        ordering = ('year', 'name',)
 
     def clean(self):
         current_year = datetime.now().year
@@ -197,6 +197,7 @@ class GenreTitle(models.Model):
 
     def __str__(self):
         return self.genre[:settings.OUTPUT_LENGTH]
+
 
 class Review(BaseReviewComment):
     title = models.ForeignKey(
