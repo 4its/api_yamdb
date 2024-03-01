@@ -63,10 +63,16 @@ _**NOTE:**_ **Суперюзер Django** всегда обладает прав
     ```bash
     python3 manage.py migrate
     ```
+   
 * Запустить проект:
   ```bash
   python3 manage.py runserver
   ```
+
+*  **NOTE:** При желании можно импортировать тестовые данные:
+    ```bash
+    python3 manage.py import_csv
+    ```
 
 ### Сэк используемых технологий
  * [Python 3.9](https://www.python.org/downloads/release/python-390/)
@@ -77,4 +83,4 @@ _**NOTE:**_ **Суперюзер Django** всегда обладает прав
 ### Список разработчиков проекта:
 * [**Nikita Goncharov**](https://github.com/ARLIKIN)
 * [**Sergey Kulbida**](https://github.com/SergeyKDEV) 
-* [**Goerge Egiazaryan**](https://github.com/4its/)
+* [**Goerge Egiazaryan**](https://github.com/4its)
