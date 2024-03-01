@@ -5,8 +5,9 @@ from django.conf import settings
 from django.core.management import BaseCommand
 from django.db import IntegrityError
 
-from reviews.models import (Category, Comment, Genre, GenreTitle, Review,
-                            Title, User)
+from reviews.models import (
+    Category, Comment, Genre, GenreTitle, Review, Title, User
+)
 
 FILES_PATH = os.path.join(settings.BASE_DIR, 'static/data/')
 
@@ -67,7 +68,6 @@ def load_csv(file_name, model_class):
         except (ValueError, IntegrityError) as error:
             print(f'Ошибка в загружаемых данных. {error}.')
             break
-    print(f'Таблица {model_class.__qualname__} загружена.')
 
 
 class Command(BaseCommand):
@@ -77,7 +77,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         for file_name, model_class in IMPORT_MODELS.items():
-            print(f'Загрузка таблицы {model_class.__qualname__}')
             load_csv(file_name, model_class)
 
         self.stdout.write(
