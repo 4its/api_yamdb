@@ -108,9 +108,9 @@ SIMPLE_JWT = {
 }
 
 REST_FRAMEWORK = {
-    # "DEFAULT_PERMISSION_CLASSES": [
-    #     "rest_framework.permissions.IsAuthenticated",
-    # ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
@@ -120,3 +120,21 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 5,
 }
+
+
+# Constants block
+RESERVED_USERNAMES = ('me',)
+USERNAME_PATTERN = r'^[\w.@+-]+\Z'
+
+STANDARD_FIELD_LENGTH = 150
+NAME_FIELD_LENGTH = 256
+SLUG_FIELD_LENGTH = 50
+EMAIL_FIELD_LENGTH = 254
+
+MINIMUM_SCORE = 1
+MAXIMUM_SCORE = 10
+
+OUTPUT_LENGTH = 25
+
+PINCODE_CHARS = '1234567890'
+PINCODE_LENGTH = 6
