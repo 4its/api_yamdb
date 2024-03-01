@@ -16,6 +16,7 @@
  * [**Django 3.2**](https://docs.djangoproject.com/en/5.0/releases/3.2/) 
  * [**Simplejwt 5.3.1**](https://django-rest-framework-simplejwt.readthedocs.io/en/latest/getting_started.html)
  * [**DRF 3.12.4**](https://www.django-rest-framework.org/community/release-notes/#3124)
+
   
 ## Ресурсы API YaMDb
 * Ресурс **auth**: аутентификация.
@@ -25,7 +26,6 @@
 * Ресурс **genres**: жанры произведений. Одно произведение может быть привязано к нескольким жанрам.
 * Ресурс **reviews**: отзывы на произведения. Отзыв привязан к определённому произведению.
 * Ресурс **comments**: комментарии к отзывам. Комментарий привязан к определённому отзыву.
-
 Подробнее с эндпойнтами, можно ознакомится по адресу http://127.0.0.1/redoc/ после запуску проекта.
 
 ## Пользовательские права доступа
@@ -56,7 +56,7 @@ _**NOTE:**_ **Суперюзер Django** всегда обладает прав
     python3 -m venv venv && source env/bin/activate 
     ```
 
-* Установить зависимости из файла requirements.txt:\
+* Установить зависимости из файла requirements.txt:
     ```bash
     pip install -r requirements.txt
     ```
@@ -75,7 +75,7 @@ _**NOTE:**_ **Суперюзер Django** всегда обладает прав
   python3 manage.py runserver
   ```
 
-*  **NOTE:** При желании можно импортировать тестовые данные:
+**NOTE:** При желании можно импортировать тестовые данные:
     ```bash
     python3 manage.py import_csv
     ```

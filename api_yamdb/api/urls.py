@@ -5,6 +5,7 @@ from .views import (CategoriesViewSet, CommentViewSet, GenresViewSet,
                     ReviewsViewSet, TitleViewSet, TokenView, UserMeView,
                     UserSignupView, UserViewSet)
 
+
 router_v1 = SimpleRouter()
 router_v1.register(r'titles', TitleViewSet, basename='titles')
 router_v1.register(r'categories', CategoriesViewSet, basename='categories')
@@ -20,6 +21,7 @@ router_v1.register(
     CommentViewSet,
     basename='comments'
 )
+
 auth_url = [
     path('signup/', UserSignupView.as_view(), name='signup'),
     path('token/', TokenView.as_view(), name='token'),

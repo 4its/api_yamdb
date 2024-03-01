@@ -142,5 +142,6 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name='review',
             constraint=models.UniqueConstraint(fields=('title', 'author'), name='unique_review_for_user'),
+
         ),
     ]

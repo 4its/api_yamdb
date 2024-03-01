@@ -19,6 +19,7 @@ from .serializers import (CategoriesSerializer, CommentsSerializer,
                           TitlesSerializer, TokenSerializer,
                           UserSerializer, UsersProfileSerializer)
 
+
 EXCEPTION_MESSAGES = 'Изменение чужого контента запрещено!'
 
 
