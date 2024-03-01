@@ -10,13 +10,13 @@ from rest_framework.serializers import ValidationError
 from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Genre, Review, Title, User
-
 from .filters import GenreCategoryFilter
 from .permissions import (AdminOnly, IsAdminOrReadOnly,
                           IsAuthorAdminModeratorOrReadOnly)
 from .serializers import (CategoriesSerializer, CommentsSerializer,
                           GenresSerializer, ReviewsSerializer,
-                          SignupSerializer, TitlesSerializer, TokenSerializer,
+                          SignupSerializer, TitleReadSerializer,
+                          TitlesSerializer, TokenSerializer,
                           UserSerializer, UsersProfileSerializer)
 
 EXCEPTION_MESSAGES = 'Изменение чужого контента запрещено!'
@@ -92,7 +92,6 @@ class UserMeView(generics.RetrieveUpdateAPIView):
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.annotate(rating=Avg('reviews__score')).all()
-    serializer_class = TitlesSerializer
     pagination_class = PageNumberPagination
     permission_classes = (IsAdminOrReadOnly,)
     http_method_names = ('get', 'post', 'patch', 'delete',)
@@ -102,6 +101,11 @@ class TitleViewSet(viewsets.ModelViewSet):
         GenreCategoryFilter,
     )
     filterset_fields = ('category__slug', 'genre__slug', 'name', 'year',)
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return TitleReadSerializer
+        return TitlesSerializer
 
 
 class CategoriesViewSet(
