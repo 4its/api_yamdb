@@ -10,6 +10,12 @@
 * оставлять отзывы;
 * ставить оценки;
 * оставлять комментарии к отзывам;
+
+### Сэк используемых технологий
+ * [**Python 3.9**](https://www.python.org/downloads/release/python-390/)
+ * [**Django 3.2**](https://docs.djangoproject.com/en/5.0/releases/3.2/) 
+ * [**Simplejwt 5.3.1**](https://django-rest-framework-simplejwt.readthedocs.io/en/latest/getting_started.html)
+ * [**DRF 3.12.4**](https://www.django-rest-framework.org/community/release-notes/#3124)
   
 ## Ресурсы API YaMDb
 * Ресурс **auth**: аутентификация.
@@ -63,18 +69,18 @@ _**NOTE:**_ **Суперюзер Django** всегда обладает прав
     ```bash
     python3 manage.py migrate
     ```
+   
 * Запустить проект:
   ```bash
   python3 manage.py runserver
   ```
 
-### Сэк используемых технологий
- * [Python 3.9](https://www.python.org/downloads/release/python-390/)
- * [Django 3.2](https://docs.djangoproject.com/en/5.0/releases/3.2/) 
- * [Simplejwt 5.3.1](https://django-rest-framework-simplejwt.readthedocs.io/en/latest/getting_started.html)
- * [DRF 3.12.4](https://www.django-rest-framework.org/community/release-notes/#3124)
+*  **NOTE:** При желании можно импортировать тестовые данные:
+    ```bash
+    python3 manage.py import_csv
+    ```
 
 ### Список разработчиков проекта:
 * [**Nikita Goncharov**](https://github.com/ARLIKIN)
 * [**Sergey Kulbida**](https://github.com/SergeyKDEV) 
-* [**Goerge Egiazaryan**](https://github.com/4its/)
+* [**Goerge Egiazaryan**](https://github.com/4its)
