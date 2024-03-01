@@ -56,6 +56,19 @@ class GenresSerializer(serializers.ModelSerializer):
         model = Genre
 
 
+class TitleReadSerializer(serializers.ModelSerializer):
+    genre = GenresSerializer(many=True)
+    category = CategoriesSerializer()
+    rating = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Title
+        fields = (
+            'id', 'name', 'year', 'rating', 'description', 'genre', 'category',
+        )
+        read_only_fields = ('genre', 'category',)
+
+
 class TitlesSerializer(serializers.ModelSerializer):
     genre = serializers.SlugRelatedField(
         slug_field='slug',
@@ -66,33 +79,16 @@ class TitlesSerializer(serializers.ModelSerializer):
         slug_field='slug',
         queryset=Category.objects.all()
     )
-    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Title
         fields = (
-            'id', 'name', 'year', 'rating', 'description', 'genre', 'category',
+            'name', 'year', 'description', 'genre', 'category',
         )
-        read_only_fields = ('rating',)
 
-    def to_representation(self, instance):
-        """Представление данных модели Titles при GET запросе."""
-        representation = super().to_representation(instance)
-        representation['genre'] = GenresSerializer(
-            instance.genre, many=True).data
-        representation['category'] = CategoriesSerializer(
-            instance.category).data
-        return representation
-
-    def create(self, validated_data):
-        """Создает экземпляр объекта Title."""
-        genres_data = validated_data.pop('genre')
-        category_data = validated_data.pop('category')
-        title = Title.objects.create(
-            category=category_data, **validated_data)
-        title.genre.set(genres_data)
-        title.save()
-        return title
+    def to_representation(self, title):
+        serializer = TitleReadSerializer(title)
+        return serializer.data
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
