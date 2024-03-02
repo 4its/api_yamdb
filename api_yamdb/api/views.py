@@ -10,14 +10,20 @@ from rest_framework.serializers import ValidationError
 from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Genre, Review, Title, User
+from reviews.utils import (
+    generate_confirmation_code, check_confirmation_code
+)
 from .filters import GenreCategoryFilter
-from .permissions import (AdminOnly, IsAdminOrReadOnly,
-                          IsAuthorAdminModeratorOrReadOnly)
-from .serializers import (CategoriesSerializer, CommentsSerializer,
-                          GenresSerializer, ReviewsSerializer,
-                          SignupSerializer, TitleReadSerializer,
-                          TitlesSerializer, TokenSerializer,
-                          UserSerializer, UsersProfileSerializer)
+from .permissions import (
+    AdminOnly, IsAdminOrReadOnly, IsAuthorAdminModeratorOrReadOnly,
+)
+from .serializers import (
+    CategoriesSerializer, CommentsSerializer,
+    GenresSerializer, ReviewsSerializer,
+    SignupSerializer, TitleReadSerializer,
+    TitlesSerializer, TokenSerializer,
+    UserSerializer, UsersProfileSerializer
+)
 
 
 EXCEPTION_MESSAGES = 'Изменение чужого контента запрещено!'
@@ -31,20 +37,24 @@ class UserSignupView(views.APIView):
         serializer.is_valid(raise_exception=True)
         username = serializer.validated_data.get('username')
         email = serializer.validated_data.get('email')
-        if User.objects.filter(email=email).exclude(
-                username=username).exists():
+        users_set = User.objects.all()
+        if users_set.filter(email=email).exclude(username=username).exists():
             raise ValidationError('Такой email уже зарегистрирован.')
-        if User.objects.filter(username=username).exclude(
-                email=email).exists():
+        if users_set.filter(username=username).exclude(email=email).exists():
             raise ValidationError('Такой username уже зарегистрирован.')
 
         user, created = User.objects.get_or_create(
             username=username,
             email=email,
         )
+        message = ('Your confirmation code is: {}'.format(
+                generate_confirmation_code(user, silent=False)
+            )
+        ),
+        pincode=generate_confirmation_code(user, silent=False)
         send_mail(
             'Confirmation Code for Yamdb',
-            f'Your confirmation code is: {user.generate_confirmation_code()}',
+            f'Your confirmation code is: {pincode}',
             settings.DEFAULT_FROM_EMAIL,
             [user.email],
             fail_silently=True,
@@ -61,7 +71,7 @@ class TokenView(generics.CreateAPIView):
         username = serializer.validated_data.get('username')
         confirmation_code = serializer.validated_data.get('confirmation_code')
         user = generics.get_object_or_404(User, username=username)
-        if user.check_confirmation_code(confirmation_code):
+        if check_confirmation_code(user, confirmation_code):
             return Response(
                 dict(token=str(AccessToken.for_user(user))),
                 status=status.HTTP_200_OK
@@ -78,7 +88,7 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
     lookup_field = 'username'
-    permission_classes = (permissions.IsAuthenticated, AdminOnly,)
+    permission_classes = (AdminOnly,)
     serializer_class = UserSerializer
     pagination_class = PageNumberPagination
 
