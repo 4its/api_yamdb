@@ -67,7 +67,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'year', 'rating', 'description', 'genre', 'category',
         )
-        read_only_fields = ('genre', 'category',)
+        read_only_fields = ('__all__',)
 
 
 class TitlesSerializer(serializers.ModelSerializer):
@@ -88,8 +88,7 @@ class TitlesSerializer(serializers.ModelSerializer):
         )
 
     def to_representation(self, title):
-        serializer = TitleReadSerializer(title)
-        return serializer.data
+        return TitleReadSerializer(title).data
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
@@ -105,11 +104,15 @@ class ReviewsSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         request = self.context['request']
-        title_id = self.context['view'].kwargs.get('title_id')
-        user = request.user
-        review = Review.objects.filter(title=title_id, author=user).exists()
-        if review and request.method == 'POST':
-            raise ValidationError('Вы уже оставили отзыв на это произведение')
+        if request.method == 'POST':
+            review = Review.objects.filter(
+                title=self.context['view'].kwargs.get('title_id'),
+                author=request.user
+            ).exists()
+            if review:
+                raise ValidationError(
+                    'Вы уже оставили отзыв на это произведение'
+                )
         return data
 
 
@@ -122,4 +125,3 @@ class CommentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ('id', 'text', 'author', 'pub_date',)
-        read_only_fields = ('author',)
