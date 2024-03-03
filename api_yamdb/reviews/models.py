@@ -1,12 +1,9 @@
-from datetime import datetime
-
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from .validators import validate_username
+from .validators import validate_username, validate_year
 
 
 class BaseGroup(models.Model):
@@ -22,13 +19,17 @@ class BaseGroup(models.Model):
 
     class Meta:
         abstract = True
+        ordering = ('name',)
 
     def __str__(self):
         return self.name[:settings.OUTPUT_LENGTH]
 
 
 class BasePublication(models.Model):
-    author = models.ForeignKey('User', on_delete=models.CASCADE)
+    author = models.ForeignKey(
+        'User',
+        on_delete=models.CASCADE
+    )
     text = models.TextField(verbose_name='Текст')
     pub_date = models.DateTimeField(
         verbose_name='Дата публикации',
@@ -37,6 +38,7 @@ class BasePublication(models.Model):
 
     class Meta:
         abstract = True
+        ordering = ['pub_date']
 
     def __str__(self):
         return self.text[:settings.OUTPUT_LENGTH]
@@ -114,7 +116,6 @@ class Category(BaseGroup):
         verbose_name = 'Категория'
         verbose_name_plural = 'категории'
         default_related_name = 'categories'
-        ordering = ('name',)
 
 
 class Genre(BaseGroup):
@@ -124,7 +125,6 @@ class Genre(BaseGroup):
         verbose_name = 'Жанр'
         verbose_name_plural = 'жанры'
         default_related_name = 'genres'
-        ordering = ('name',)
 
 
 class Title(models.Model):
@@ -134,13 +134,15 @@ class Title(models.Model):
         max_length=settings.NAME_FIELD_LENGTH,
         verbose_name='Название',
     )
-    year = models.IntegerField(verbose_name='Год выпуска', )
+    year = models.IntegerField(
+        verbose_name='Год выпуска',
+        validators=(validate_year,)
+    )
     description = models.TextField(
         verbose_name='Описание',
         blank=True)
     genre = models.ManyToManyField(
-        Genre,
-        through='GenreTitle'
+        Genre
     )
     category = models.ForeignKey(
         Category,
@@ -154,34 +156,8 @@ class Title(models.Model):
         default_related_name = 'titles'
         ordering = ('year', 'name',)
 
-    def clean(self):
-        current_year = datetime.now().year
-        if self.year > current_year:
-            raise ValidationError(
-                f'Год выпуска произведения не должен превышать текущий\n'
-                f'{self.year} > {current_year}!'
-            )
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        return super().save(*args, **kwargs)
-
     def __str__(self):
         return self.name[:settings.OUTPUT_LENGTH]
-
-
-class GenreTitle(models.Model):
-    genre = models.ForeignKey(
-        Genre,
-        on_delete=models.CASCADE
-    )
-    title = models.ForeignKey(
-        Title,
-        on_delete=models.CASCADE
-    )
-
-    def __str__(self):
-        return self.genre[:settings.OUTPUT_LENGTH]
 
 
 class Review(BasePublication):
