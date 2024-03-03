@@ -3,7 +3,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from reviews.models import Category, Comment, Genre, Review, Title, User
-from reviews.validators import validate_username
+from reviews.validators import validate_username, validate_year
 
 
 class SignupSerializer(serializers.Serializer):
@@ -80,6 +80,9 @@ class TitlesSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(
         slug_field='slug',
         queryset=Category.objects.all()
+    )
+    year = serializers.IntegerField(
+        validators=(validate_year,)
     )
 
     class Meta:
