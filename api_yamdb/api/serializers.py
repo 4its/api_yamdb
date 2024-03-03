@@ -3,28 +3,33 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from reviews.models import Category, Comment, Genre, Review, Title, User
-from reviews.validators import validate_username
+from reviews.validators import validate_username, validate_year
 
 
 class SignupSerializer(serializers.Serializer):
     username = serializers.CharField(
         max_length=settings.STANDARD_FIELD_LENGTH,
-        validators=(validate_username,)
+        validators=(validate_username,),
+        required=True,
     )
     email = serializers.EmailField(
-        max_length=settings.EMAIL_FIELD_LENGTH
+        max_length=settings.EMAIL_FIELD_LENGTH,
+        required=True,
     )
 
 
 class TokenSerializer(serializers.Serializer):
     username = serializers.CharField(
         max_length=settings.STANDARD_FIELD_LENGTH,
-        validators=(validate_username,)
+        validators=(validate_username,),
+        required=True,
     )
-    confirmation_code = serializers.CharField()
+    confirmation_code = serializers.CharField(
+        required=True,
+    )
 
 
-class BaseUserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
@@ -33,14 +38,10 @@ class BaseUserSerializer(serializers.ModelSerializer):
         )
 
 
-class UserSerializer(BaseUserSerializer):
-    pass
+class UsersProfileSerializer(UserSerializer):
 
-
-class UsersProfileSerializer(BaseUserSerializer):
-
-    class Meta(BaseUserSerializer.Meta):
-        read_only_fields = ('id', 'role',)
+    class Meta(UserSerializer.Meta):
+        read_only_fields = ('role',)
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -67,7 +68,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'year', 'rating', 'description', 'genre', 'category',
         )
-        read_only_fields = ('genre', 'category',)
+        read_only_fields = ('__all__',)
 
 
 class TitlesSerializer(serializers.ModelSerializer):
@@ -80,6 +81,9 @@ class TitlesSerializer(serializers.ModelSerializer):
         slug_field='slug',
         queryset=Category.objects.all()
     )
+    year = serializers.IntegerField(
+        validators=(validate_year,)
+    )
 
     class Meta:
         model = Title
@@ -88,8 +92,7 @@ class TitlesSerializer(serializers.ModelSerializer):
         )
 
     def to_representation(self, title):
-        serializer = TitleReadSerializer(title)
-        return serializer.data
+        return TitleReadSerializer(title).data
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
@@ -105,11 +108,14 @@ class ReviewsSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         request = self.context['request']
-        title_id = self.context['view'].kwargs.get('title_id')
-        user = request.user
-        review = Review.objects.filter(title=title_id, author=user).exists()
-        if review and request.method == 'POST':
-            raise ValidationError('Вы уже оставили отзыв на это произведение')
+        if request.method == 'POST':
+            if Review.objects.filter(
+                title=self.context['view'].kwargs.get('title_id'),
+                author=request.user
+            ).exists():
+                raise ValidationError(
+                    'Вы уже оставили отзыв на это произведение'
+                )
         return data
 
 
@@ -122,4 +128,3 @@ class CommentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ('id', 'text', 'author', 'pub_date',)
-        read_only_fields = ('author',)

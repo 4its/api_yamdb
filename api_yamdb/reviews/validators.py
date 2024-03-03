@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -7,10 +8,20 @@ from django.core.exceptions import ValidationError
 def validate_username(username):
     if username.lower() in settings.RESERVED_USERNAMES:
         raise ValidationError(
-            'Данное имя пользователя зарезервировано системой',
+            f'Имя пользователя "{username}" зарезервировано системой'
+        )
+    forbidden_chars = [char for char in set(username)
+                       if (re.search(settings.USERNAME_PATTERN, char) is None)]
+    if forbidden_chars:
+        raise ValidationError(
+            f'Недопустимые символы в имени пользователя: {forbidden_chars}'
         )
 
-    if re.search(settings.USERNAME_PATTERN, username) is None:
+
+def validate_year(year):
+    current_year = datetime.now().year
+    if year > current_year:
         raise ValidationError(
-            f'Недопустимые символы в имени пользователя {username}'
+            f'Год выпуска произведения не должен превышать текущий\n'
+            f'{year} > {current_year}!'
         )

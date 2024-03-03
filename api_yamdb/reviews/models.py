@@ -1,17 +1,12 @@
-import hashlib
-import random
-from datetime import datetime
-
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from .validators import validate_username
+from .validators import validate_username, validate_year
 
 
-class BaseCategoryGenre(models.Model):
+class BaseGroup(models.Model):
     name = models.TextField(
         max_length=settings.NAME_FIELD_LENGTH,
         verbose_name='Имя'
@@ -24,13 +19,17 @@ class BaseCategoryGenre(models.Model):
 
     class Meta:
         abstract = True
+        ordering = ('name',)
 
     def __str__(self):
         return self.name[:settings.OUTPUT_LENGTH]
 
 
-class BaseReviewComment(models.Model):
-    author = models.ForeignKey('User', on_delete=models.CASCADE)
+class BasePublication(models.Model):
+    author = models.ForeignKey(
+        'User',
+        on_delete=models.CASCADE
+    )
     text = models.TextField(verbose_name='Текст')
     pub_date = models.DateTimeField(
         verbose_name='Дата публикации',
@@ -39,6 +38,7 @@ class BaseReviewComment(models.Model):
 
     class Meta:
         abstract = True
+        ordering = ['pub_date']
 
     def __str__(self):
         return self.text[:settings.OUTPUT_LENGTH]
@@ -80,11 +80,11 @@ class User(AbstractUser):
         verbose_name='Роль',
         choices=RoleChoice.choices,
         default=RoleChoice.user,
-        max_length=max(len(choice) for choice in RoleChoice.__dict__),
+        max_length=max(len(choice) for choice in list(RoleChoice)),
     )
     confirmation_code = models.CharField(
         verbose_name='Пинкод',
-        max_length=128,
+        max_length=settings.PINCODE_LENGTH,
         default='None',
     )
 
@@ -94,25 +94,12 @@ class User(AbstractUser):
         default_related_name = 'users'
         ordering = ('username',)
 
-    @classmethod
-    def hash_value(cls, value):
-        return hashlib.sha256(value.encode()).hexdigest()
-
-    def generate_confirmation_code(self):
-        confirmation_code = ''.join(random.choices(
-            settings.PINCODE_CHARS,
-            k=settings.PINCODE_LENGTH
-        ))
-        self.confirmation_code = self.hash_value(confirmation_code)
-        self.save()
-        return confirmation_code
-
-    def check_confirmation_code(self, confirmation_code):
-        return self.confirmation_code == self.hash_value(confirmation_code)
-
     @property
     def is_admin(self):
-        return self.is_superuser or self.role == self.RoleChoice.admin
+        return (
+            self.is_superuser or self.is_staff
+            or self.role == self.RoleChoice.admin
+        )
 
     @property
     def is_moderator(self):
@@ -121,25 +108,31 @@ class User(AbstractUser):
     def __str__(self):
         return self.username[:settings.OUTPUT_LENGTH]
 
+    def clean(self):
+        current_year = datetime.now().year
+        if self.year > current_year:
+            raise ValidationError(
+                f'Год выпуска произведения не должен превышать текущий\n'
+                f'{self.year} > {current_year}!'
+            )
 
-class Category(BaseCategoryGenre):
+
+class Category(BaseGroup):
     """Модель для категорий."""
 
     class Meta:
         verbose_name = 'Категория'
         verbose_name_plural = 'категории'
         default_related_name = 'categories'
-        ordering = ('name',)
 
 
-class Genre(BaseCategoryGenre):
+class Genre(BaseGroup):
     """Модель для жанра."""
 
     class Meta:
         verbose_name = 'Жанр'
         verbose_name_plural = 'жанры'
         default_related_name = 'genres'
-        ordering = ('name',)
 
 
 class Title(models.Model):
@@ -149,13 +142,15 @@ class Title(models.Model):
         max_length=settings.NAME_FIELD_LENGTH,
         verbose_name='Название',
     )
-    year = models.IntegerField(verbose_name='Год выпуска', )
+    year = models.IntegerField(
+        verbose_name='Год выпуска',
+        validators=(validate_year,)
+    )
     description = models.TextField(
         verbose_name='Описание',
         blank=True)
     genre = models.ManyToManyField(
-        Genre,
-        through='GenreTitle'
+        Genre
     )
     category = models.ForeignKey(
         Category,
@@ -169,37 +164,11 @@ class Title(models.Model):
         default_related_name = 'titles'
         ordering = ('year', 'name',)
 
-    def clean(self):
-        current_year = datetime.now().year
-        if self.year > current_year:
-            raise ValidationError(
-                f'Год выпуска произведения не должен превышать текущий\n'
-                f'{self.year} > {current_year}!'
-            )
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        return super().save(*args, **kwargs)
-
     def __str__(self):
         return self.name[:settings.OUTPUT_LENGTH]
 
 
-class GenreTitle(models.Model):
-    genre = models.ForeignKey(
-        Genre,
-        on_delete=models.CASCADE
-    )
-    title = models.ForeignKey(
-        Title,
-        on_delete=models.CASCADE
-    )
-
-    def __str__(self):
-        return self.genre[:settings.OUTPUT_LENGTH]
-
-
-class Review(BaseReviewComment):
+class Review(BasePublication):
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -233,7 +202,7 @@ class Review(BaseReviewComment):
         ordering = ('title',)
 
 
-class Comment(BaseReviewComment):
+class Comment(BasePublication):
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,

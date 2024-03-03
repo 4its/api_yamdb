@@ -12,12 +12,12 @@ router_v1.register(r'categories', CategoriesViewSet, basename='categories')
 router_v1.register(r'genres', GenresViewSet, basename='genres')
 router_v1.register(r'users', UserViewSet, basename='users')
 router_v1.register(
-    r'titles/(?P<title_id>[^/.]+)/reviews',
+    r'titles/(?P<title_id>\d+)/reviews',
     ReviewsViewSet,
     basename='reviews'
 )
 router_v1.register(
-    'titles/(?P<title_id>[^/.]+)/reviews/(?P<review_id>[^/.]+)/comments',
+    'titles/(?P<title_id>\\d+)/reviews/(?P<review_id>\\d+)/comments',
     CommentViewSet,
     basename='comments'
 )
@@ -26,7 +26,6 @@ auth_url = [
     path('signup/', UserSignupView.as_view(), name='signup'),
     path('token/', TokenView.as_view(), name='token'),
 ]
-
 
 urlpatterns = [
     path('v1/auth/', include(auth_url)),

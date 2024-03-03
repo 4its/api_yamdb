@@ -1,4 +1,5 @@
 import csv
+import sqlite3
 import os
 
 from django.conf import settings
@@ -6,16 +7,17 @@ from django.core.management import BaseCommand
 from django.db import IntegrityError
 
 from reviews.models import (
-    Category, Comment, Genre, GenreTitle, Review, Title, User
+    Category, Comment, Genre, Review, Title, User
 )
 
+
 FILES_PATH = os.path.join(settings.BASE_DIR, 'static/data/')
+
 
 IMPORT_MODELS = {
     'category': Category,
     'genre': Genre,
     'titles': Title,
-    'genre_title': GenreTitle,
     'users': User,
     'review': Review,
     'comments': Comment,
@@ -81,3 +83,24 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.SUCCESS('Данные успешно загружены!'))
+
+
+conn = sqlite3.connect(os.path.join(settings.BASE_DIR, 'db.sqlite3'))
+cursor = conn.cursor()
+
+cursor.execute('''CREATE TABLE IF NOT EXISTS reviews_title_genre (
+                    id INTEGER,
+                    title_id INTEGER,
+                    genre_id INTEGER
+                )''')
+
+sq = ("INSERT INTO reviews_title_genre "
+      "(id, title_id, genre_id) VALUES (?, ?, ?)")
+with (open(f'{FILES_PATH}genre_title.csv', 'r', newline='', encoding='utf-8')
+      as csv_file):
+    csv_reader = csv.reader(csv_file)
+    next(csv_reader)
+    for row in csv_reader:
+        cursor.execute(sq, row)
+conn.commit()
+conn.close()
