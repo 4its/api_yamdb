@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.core.mail import send_mail
+from django.db import IntegrityError
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (filters, generics, mixins, permissions, status,
@@ -37,20 +38,16 @@ class UserSignupView(views.APIView):
         serializer.is_valid(raise_exception=True)
         username = serializer.validated_data.get('username')
         email = serializer.validated_data.get('email')
-        users_set = User.objects.all()
-        if users_set.filter(email=email).exclude(username=username).exists():
-            raise ValidationError('Такой email уже зарегистрирован.')
-        if users_set.filter(username=username).exclude(email=email).exists():
-            raise ValidationError('Такой username уже зарегистрирован.')
-
-        user, created = User.objects.get_or_create(
-            username=username,
-            email=email,
-        )
-        message = ('Your confirmation code is: {}'.format(
-                generate_confirmation_code(user, silent=False)
+        try:
+            user, created = User.objects.get_or_create(
+                username=username,
+                email=email,
             )
-        ),
+        except IntegrityError:
+            return Response(
+                dict(error='Username или Email уже использованы в системе.'),
+                status=status.HTTP_400_BAD_REQUEST
+            )
         pincode=generate_confirmation_code(user, silent=False)
         send_mail(
             'Confirmation Code for Yamdb',
