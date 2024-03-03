@@ -1,5 +1,3 @@
-import hashlib
-import random
 from datetime import datetime
 
 from django.conf import settings
@@ -86,11 +84,11 @@ class User(AbstractUser):
         verbose_name='Роль',
         choices=RoleChoice.choices,
         default=RoleChoice.user,
-        max_length=max(len(choice) for choice in RoleChoice.__dict__),
+        max_length=max(len(choice) for choice in list(RoleChoice)),
     )
     confirmation_code = models.CharField(
         verbose_name='Пинкод',
-        max_length=128,
+        max_length=settings.PINCODE_LENGTH,
         default='None',
     )
 
@@ -100,25 +98,12 @@ class User(AbstractUser):
         default_related_name = 'users'
         ordering = ('username',)
 
-    @classmethod
-    def hash_value(cls, value):
-        return hashlib.sha256(value.encode()).hexdigest()
-
-    def generate_confirmation_code(self):
-        confirmation_code = ''.join(random.choices(
-            settings.PINCODE_CHARS,
-            k=settings.PINCODE_LENGTH
-        ))
-        self.confirmation_code = self.hash_value(confirmation_code)
-        self.save()
-        return confirmation_code
-
-    def check_confirmation_code(self, confirmation_code):
-        return self.confirmation_code == self.hash_value(confirmation_code)
-
     @property
     def is_admin(self):
-        return self.is_superuser or self.role == self.RoleChoice.admin
+        return (
+            self.is_superuser or self.is_staff
+            or self.role == self.RoleChoice.admin
+        )
 
     @property
     def is_moderator(self):
