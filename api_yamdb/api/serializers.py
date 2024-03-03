@@ -9,22 +9,27 @@ from reviews.validators import validate_username
 class SignupSerializer(serializers.Serializer):
     username = serializers.CharField(
         max_length=settings.STANDARD_FIELD_LENGTH,
-        validators=(validate_username,)
+        validators=(validate_username,),
+        required=True,
     )
     email = serializers.EmailField(
-        max_length=settings.EMAIL_FIELD_LENGTH
+        max_length=settings.EMAIL_FIELD_LENGTH,
+        required=True,
     )
 
 
 class TokenSerializer(serializers.Serializer):
     username = serializers.CharField(
         max_length=settings.STANDARD_FIELD_LENGTH,
-        validators=(validate_username,)
+        validators=(validate_username,),
+        required=True,
     )
-    confirmation_code = serializers.CharField()
+    confirmation_code = serializers.CharField(
+        required=True,
+    )
 
 
-class BaseUserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
@@ -33,14 +38,10 @@ class BaseUserSerializer(serializers.ModelSerializer):
         )
 
 
-class UserSerializer(BaseUserSerializer):
-    pass
+class UsersProfileSerializer(UserSerializer):
 
-
-class UsersProfileSerializer(BaseUserSerializer):
-
-    class Meta(BaseUserSerializer.Meta):
-        read_only_fields = ('id', 'role',)
+    class Meta(UserSerializer.Meta):
+        read_only_fields = ('role',)
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
