@@ -1,9 +1,7 @@
 import csv
 import sqlite3
 import os
-import subprocess
 
-from django.db import models
 from django.conf import settings
 from django.core.management import BaseCommand
 from django.db import IntegrityError
@@ -16,22 +14,10 @@ from reviews.models import (
 FILES_PATH = os.path.join(settings.BASE_DIR, 'static/data/')
 
 
-# class Title_Genre(models.Model):
-#     genre = models.ForeignKey(
-#         Genre,
-#         on_delete=models.CASCADE
-#     )
-#     title = models.ForeignKey(
-#         Title,
-#         on_delete=models.CASCADE
-#     )
-
-
 IMPORT_MODELS = {
     'category': Category,
     'genre': Genre,
     'titles': Title,
-    # 'genre_title': Title_Genre,
     'users': User,
     'review': Review,
     'comments': Comment,
@@ -98,8 +84,8 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.SUCCESS('Данные успешно загружены!'))
 
-BD = os.path.join(settings.BASE_DIR, 'db.sqlite3')
-conn = sqlite3.connect(BD)
+
+conn = sqlite3.connect(os.path.join(settings.BASE_DIR, 'db.sqlite3'))
 cursor = conn.cursor()
 
 cursor.execute('''CREATE TABLE IF NOT EXISTS reviews_title_genre (
@@ -108,10 +94,13 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS reviews_title_genre (
                     genre_id INTEGER
                 )''')
 
-with open(f'{FILES_PATH}genre_title.csv', 'r', newline='', encoding='utf-8') as csv_file:
+sq = ("INSERT INTO reviews_title_genre "
+      "(id, title_id, genre_id) VALUES (?, ?, ?)")
+with (open(f'{FILES_PATH}genre_title.csv', 'r', newline='', encoding='utf-8')
+      as csv_file):
     csv_reader = csv.reader(csv_file)
     next(csv_reader)
     for row in csv_reader:
-        cursor.execute("INSERT INTO reviews_title_genre (id, title_id, genre_id) VALUES (?, ?, ?)", row)
+        cursor.execute(sq, row)
 conn.commit()
 conn.close()
