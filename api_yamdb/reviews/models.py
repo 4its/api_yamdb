@@ -9,7 +9,7 @@ from django.db import models
 from .validators import validate_username
 
 
-class BaseCategoryGenre(models.Model):
+class BaseGroup(models.Model):
     name = models.TextField(
         max_length=settings.NAME_FIELD_LENGTH,
         verbose_name='Имя'
@@ -27,7 +27,7 @@ class BaseCategoryGenre(models.Model):
         return self.name[:settings.OUTPUT_LENGTH]
 
 
-class BaseReviewComment(models.Model):
+class BasePublication(models.Model):
     author = models.ForeignKey('User', on_delete=models.CASCADE)
     text = models.TextField(verbose_name='Текст')
     pub_date = models.DateTimeField(
@@ -107,7 +107,7 @@ class User(AbstractUser):
         return self.username[:settings.OUTPUT_LENGTH]
 
 
-class Category(BaseCategoryGenre):
+class Category(BaseGroup):
     """Модель для категорий."""
 
     class Meta:
@@ -117,7 +117,7 @@ class Category(BaseCategoryGenre):
         ordering = ('name',)
 
 
-class Genre(BaseCategoryGenre):
+class Genre(BaseGroup):
     """Модель для жанра."""
 
     class Meta:
@@ -184,7 +184,7 @@ class GenreTitle(models.Model):
         return self.genre[:settings.OUTPUT_LENGTH]
 
 
-class Review(BaseReviewComment):
+class Review(BasePublication):
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -218,7 +218,7 @@ class Review(BaseReviewComment):
         ordering = ('title',)
 
 
-class Comment(BaseReviewComment):
+class Comment(BasePublication):
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
