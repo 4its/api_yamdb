@@ -11,6 +11,7 @@ from rest_framework import (
 )
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
+from rest_framework.serializers import ValidationError
 from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Genre, Review, Title, User
@@ -88,7 +89,7 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
     lookup_field = 'username'
-    permission_classes = (AdminOnly,)
+    permission_classes = (permissions.IsAuthenticated, AdminOnly,)
     serializer_class = UserSerializer
     pagination_class = PageNumberPagination
 
