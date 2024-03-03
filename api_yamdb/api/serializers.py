@@ -25,6 +25,7 @@ class TokenSerializer(serializers.Serializer):
         required=True,
     )
     confirmation_code = serializers.CharField(
+        max_length=settings.PINCODE_LENGTH,
         required=True,
     )
 
