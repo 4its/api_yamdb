@@ -48,8 +48,13 @@ class UserSignupView(views.APIView):
                 email=email,
             )
         except IntegrityError:
+            if User.objects.filter(username=username).exists:
+                return Response(
+                    dict(username=f'Имя "{username}" уже занято.'),
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             return Response(
-                dict(error='Username или Email уже использованы в системе.'),
+                dict(email=f'Адрес "{email}" уже занят.'),
                 status=status.HTTP_400_BAD_REQUEST
             )
         pincode = generate_confirmation_code(user, silent=False)
