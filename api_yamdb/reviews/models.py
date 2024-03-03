@@ -108,14 +108,6 @@ class User(AbstractUser):
     def __str__(self):
         return self.username[:settings.OUTPUT_LENGTH]
 
-    def clean(self):
-        current_year = datetime.now().year
-        if self.year > current_year:
-            raise ValidationError(
-                f'Год выпуска произведения не должен превышать текущий\n'
-                f'{self.year} > {current_year}!'
-            )
-
 
 class Category(BaseGroup):
     """Модель для категорий."""
