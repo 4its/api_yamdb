@@ -11,8 +11,8 @@ class IsAdminOrReadOnly(AdminOnly):
 
     def has_permission(self, request, view):
         return (
-                request.method in permissions.SAFE_METHODS
-                or super().has_permission(request, view)
+            request.method in permissions.SAFE_METHODS
+            or super().has_permission(request, view)
         )
 
 

@@ -3,11 +3,14 @@ from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import (filters, generics, mixins, permissions, status,
-                            views, viewsets)
+from rest_framework import (
+    filters, generics,
+    mixins, permissions,
+    status, views,
+    viewsets
+)
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from rest_framework.serializers import ValidationError
 from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Genre, Review, Title, User
@@ -48,7 +51,7 @@ class UserSignupView(views.APIView):
                 dict(error='Username или Email уже использованы в системе.'),
                 status=status.HTTP_400_BAD_REQUEST
             )
-        pincode=generate_confirmation_code(user, silent=False)
+        pincode = generate_confirmation_code(user, silent=False)
         send_mail(
             'Confirmation Code for Yamdb',
             f'Your confirmation code is: {pincode}',
@@ -99,7 +102,11 @@ class UserMeView(generics.RetrieveUpdateAPIView):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.annotate(rating=Avg('reviews__score')).all()
+    queryset = (
+        Title.objects
+        .annotate(rating=Avg('reviews__score'))
+        .order_by('year', 'name')
+    )
     pagination_class = PageNumberPagination
     permission_classes = (IsAdminOrReadOnly,)
     http_method_names = ('get', 'post', 'patch', 'delete',)
@@ -116,42 +123,37 @@ class TitleViewSet(viewsets.ModelViewSet):
         return TitlesSerializer
 
 
-class CategoriesViewSet(
+class BaseGroupViewSet(
     mixins.CreateModelMixin, mixins.ListModelMixin,
     mixins.DestroyModelMixin, viewsets.GenericViewSet
 ):
+    pagination_class = PageNumberPagination
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (
+        DjangoFilterBackend,
+        filters.SearchFilter,
+    )
+    search_fields = ('name',)
+    lookup_field = 'slug'
+
+
+class CategoriesViewSet(BaseGroupViewSet):
     queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
-    pagination_class = PageNumberPagination
-    permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (
-        DjangoFilterBackend,
-        filters.SearchFilter,
-    )
-    search_fields = ('name',)
-    lookup_field = 'slug'
 
 
-class GenresViewSet(
-    mixins.CreateModelMixin, mixins.ListModelMixin,
-    mixins.DestroyModelMixin, viewsets.GenericViewSet
-):
+class GenresViewSet(BaseGroupViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenresSerializer
-    pagination_class = PageNumberPagination
-    permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (
-        DjangoFilterBackend,
-        filters.SearchFilter,
-    )
-    search_fields = ('name',)
-    lookup_field = 'slug'
 
 
-class ReviewsViewSet(viewsets.ModelViewSet):
-    serializer_class = ReviewsSerializer
+class BasePublicationsViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthorAdminModeratorOrReadOnly,)
     http_method_names = ('get', 'post', 'patch', 'delete',)
+
+
+class ReviewsViewSet(BasePublicationsViewSet):
+    serializer_class = ReviewsSerializer
 
     def get_title(self):
         return generics.get_object_or_404(
@@ -168,10 +170,8 @@ class ReviewsViewSet(viewsets.ModelViewSet):
         )
 
 
-class CommentViewSet(viewsets.ModelViewSet):
+class CommentViewSet(BasePublicationsViewSet):
     serializer_class = CommentsSerializer
-    permission_classes = (IsAuthorAdminModeratorOrReadOnly,)
-    http_method_names = ('get', 'post', 'patch', 'delete',)
 
     def get_review(self):
         return generics.get_object_or_404(
