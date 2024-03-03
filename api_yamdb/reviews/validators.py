@@ -22,6 +22,7 @@ def validate_year(year):
     current_year = datetime.now().year
     if year > current_year:
         raise ValidationError(
-            f'Год выпуска произведения не должен превышать текущий\n'
-            f'{year} > {current_year}!'
+            f'Год выпуска произведения {year} не должен '
+            f'превышать текущий {current_year}.'
         )
+    return year
