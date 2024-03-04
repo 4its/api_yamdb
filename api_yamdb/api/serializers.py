@@ -2,14 +2,14 @@ from django.conf import settings
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from .mixins import ValidateUsernameMixin
 from reviews.models import Category, Comment, Genre, Review, Title, User
-from reviews.validators import validate_username, validate_year
+from reviews.validators import validate_year
 
 
-class SignupSerializer(serializers.Serializer):
+class SignupSerializer(serializers.Serializer, ValidateUsernameMixin):
     username = serializers.CharField(
         max_length=settings.STANDARD_FIELD_LENGTH,
-        validators=(validate_username,),
         required=True,
     )
     email = serializers.EmailField(
@@ -18,10 +18,9 @@ class SignupSerializer(serializers.Serializer):
     )
 
 
-class TokenSerializer(serializers.Serializer):
+class TokenSerializer(serializers.Serializer, ValidateUsernameMixin):
     username = serializers.CharField(
         max_length=settings.STANDARD_FIELD_LENGTH,
-        validators=(validate_username,),
         required=True,
     )
     confirmation_code = serializers.CharField(
@@ -30,20 +29,13 @@ class TokenSerializer(serializers.Serializer):
     )
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer, ValidateUsernameMixin):
 
     class Meta:
         model = User
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role',
         )
-
-    def validate_username(self, username):
-        try:
-            validate_username(username)
-        except ValidationError as error:
-            raise serializers.ValidationError(str(error))
-        return username
 
 
 class UsersProfileSerializer(UserSerializer):
