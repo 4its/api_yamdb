@@ -20,6 +20,7 @@ class BaseGroup(models.Model):
     class Meta:
         abstract = True
         ordering = ('name',)
+        default_related_name = '%(class)s' + 's'
 
     def __str__(self):
         return self.name[:settings.OUTPUT_LENGTH]
@@ -29,7 +30,6 @@ class BasePublication(models.Model):
     author = models.ForeignKey(
         'User',
         on_delete=models.CASCADE,
-        related_name='%(class)s_authors',
     )
     text = models.TextField(verbose_name='Текст')
     pub_date = models.DateTimeField(
@@ -40,6 +40,7 @@ class BasePublication(models.Model):
     class Meta:
         abstract = True
         ordering = ('pub_date',)
+        default_related_name = '%(class)s' + 's'
 
     def __str__(self):
         return self.text[:settings.OUTPUT_LENGTH]
@@ -86,7 +87,7 @@ class User(AbstractUser):
     confirmation_code = models.CharField(
         verbose_name='Пинкод',
         max_length=settings.PINCODE_LENGTH,
-        default='None',
+        null=True,
     )
 
     class Meta:
@@ -116,7 +117,6 @@ class Category(BaseGroup):
     class Meta(BaseGroup.Meta):
         verbose_name = 'Категория'
         verbose_name_plural = 'категории'
-        default_related_name = 'categories'
 
 
 class Genre(BaseGroup):
@@ -125,7 +125,6 @@ class Genre(BaseGroup):
     class Meta(BaseGroup.Meta):
         verbose_name = 'Жанр'
         verbose_name_plural = 'жанры'
-        default_related_name = 'genres'
 
 
 class Title(models.Model):
@@ -184,7 +183,6 @@ class Review(BasePublication):
     class Meta(BasePublication.Meta):
         verbose_name = 'Отзыв'
         verbose_name_plural = 'отзывы'
-        default_related_name = 'reviews'
         constraints = (
             models.UniqueConstraint(
                 fields=('title', 'author'),
@@ -202,4 +200,3 @@ class Comment(BasePublication):
     class Meta(BasePublication.Meta):
         verbose_name = 'Комментарий'
         verbose_name_plural = 'комментарий'
-        default_related_name = 'comments'
