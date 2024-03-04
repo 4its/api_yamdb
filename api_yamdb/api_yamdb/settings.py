@@ -123,7 +123,6 @@ REST_FRAMEWORK = {
 
 
 # Constants block
-RESERVED_USERNAMES = ('me',)
 USERNAME_PATTERN = r'[^\w.@+-]'
 
 STANDARD_FIELD_LENGTH = 150

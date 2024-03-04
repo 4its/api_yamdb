@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 
 
 def validate_username(username):
-    if username in settings.RESERVED_USERNAMES:
+    if username == 'me':
         raise ValidationError(
             f'Имя пользователя "{username}" зарезервировано системой'
         )
@@ -19,6 +19,7 @@ def validate_username(username):
             'Недопустимые символы в '
             'имени пользователя: {}'.format(forbidden_chars)
         )
+    return username
 
 
 def validate_year(year):
