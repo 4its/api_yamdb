@@ -6,15 +6,16 @@ from django.core.exceptions import ValidationError
 
 
 def validate_username(username):
+    # .lower() применено для исключения вариаций, типа: Me, mE, ME etc...
     if username.lower() in settings.RESERVED_USERNAMES:
         raise ValidationError(
             f'Имя пользователя "{username}" зарезервировано системой'
         )
-    forbidden_chars = [char for char in set(username)
-                       if (re.search(settings.USERNAME_PATTERN, char) is None)]
+    forbidden_chars = re.findall(settings.USERNAME_PATTERN, username)
     if forbidden_chars:
         raise ValidationError(
-            f'Недопустимые символы в имени пользователя: {forbidden_chars}'
+            'Недопустимые символы в'
+            ' имени пользователя: {}'.format(*set(forbidden_chars))
         )
 
 
