@@ -28,7 +28,8 @@ class BaseGroup(models.Model):
 class BasePublication(models.Model):
     author = models.ForeignKey(
         'User',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name='%(class)s_authors',
     )
     text = models.TextField(verbose_name='Текст')
     pub_date = models.DateTimeField(
@@ -164,7 +165,7 @@ class Review(BasePublication):
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
-        verbose_name='Обзор'
+        verbose_name='Обзор',
     )
     score = models.SmallIntegerField(
         verbose_name='Оценка',

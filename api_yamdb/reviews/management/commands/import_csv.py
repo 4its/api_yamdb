@@ -96,8 +96,10 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS reviews_title_genre (
 
 sq = ("INSERT INTO reviews_title_genre "
       "(id, title_id, genre_id) VALUES (?, ?, ?)")
-with (open(f'{FILES_PATH}genre_title.csv', 'r', newline='', encoding='utf-8')
-      as csv_file):
+with open(
+    os.path.join(FILES_PATH, 'genre_title.csv'), 'r',
+    newline='', encoding='utf-8'
+) as csv_file:
     csv_reader = csv.reader(csv_file)
     next(csv_reader)
     for row in csv_reader:

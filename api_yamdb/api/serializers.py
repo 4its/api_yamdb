@@ -25,6 +25,7 @@ class TokenSerializer(serializers.Serializer):
         required=True,
     )
     confirmation_code = serializers.CharField(
+        max_length=settings.PINCODE_LENGTH,
         required=True,
     )
 
@@ -36,6 +37,13 @@ class UserSerializer(serializers.ModelSerializer):
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role',
         )
+
+    def validate_username(self, username):
+        try:
+            validate_username(username)
+        except ValidationError as error:
+            raise serializers.ValidationError(str(error))
+        return username
 
 
 class UsersProfileSerializer(UserSerializer):

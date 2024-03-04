@@ -4,14 +4,11 @@ from django.db import IntegrityError
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (
-    filters, generics,
-    mixins, permissions,
-    status, views,
-    viewsets
+    filters, generics, mixins, permissions,
+    status, views, viewsets
 )
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from rest_framework.serializers import ValidationError
 from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Genre, Review, Title, User
@@ -31,9 +28,6 @@ from .serializers import (
 )
 
 
-EXCEPTION_MESSAGES = 'Изменение чужого контента запрещено!'
-
-
 class UserSignupView(views.APIView):
     permission_classes = (permissions.AllowAny,)
 
@@ -48,8 +42,13 @@ class UserSignupView(views.APIView):
                 email=email,
             )
         except IntegrityError:
+            if User.objects.filter(username=username).exists:
+                return Response(
+                    dict(username=f'Имя "{username}" уже занято.'),
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             return Response(
-                dict(error='Username или Email уже использованы в системе.'),
+                dict(email=f'Адрес "{email}" уже занят.'),
                 status=status.HTTP_400_BAD_REQUEST
             )
         pincode = generate_confirmation_code(user, silent=False)
@@ -77,6 +76,7 @@ class TokenView(generics.CreateAPIView):
                 dict(token=str(AccessToken.for_user(user))),
                 status=status.HTTP_200_OK
             )
+        generate_confirmation_code(user, silent=True)
         return Response(
             dict(confirmation_code='invalid confirmation_code'),
             status=status.HTTP_400_BAD_REQUEST
@@ -85,12 +85,12 @@ class TokenView(generics.CreateAPIView):
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = (permissions.IsAuthenticated, AdminOnly,)
     http_method_names = ('get', 'post', 'patch', 'delete')
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
     lookup_field = 'username'
-    permission_classes = (permissions.IsAuthenticated, AdminOnly,)
-    serializer_class = UserSerializer
     pagination_class = PageNumberPagination
 
 
