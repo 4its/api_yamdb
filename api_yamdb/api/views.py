@@ -1,3 +1,5 @@
+import random
+
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import IntegrityError
@@ -12,9 +14,6 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Genre, Review, Title, User
-from reviews.utils import (
-    generate_confirmation_code, check_confirmation_code
-)
 from .filters import GenreCategoryFilter
 from .permissions import (
     AdminOnly, IsAdminOrReadOnly, IsAuthorAdminModeratorOrReadOnly,
@@ -43,18 +42,22 @@ class UserSignupView(views.APIView):
             )
         except IntegrityError:
             if User.objects.filter(username=username).exists:
-                return Response(
-                    dict(username=f'Имя "{username}" уже занято.'),
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                message_to_response = dict(username=f'Имя "{username}"'
+                                                    f' уже занято.')
+            else:
+                message_to_response = dict(email=f'Адрес "{email}" уже занят.')
             return Response(
-                dict(email=f'Адрес "{email}" уже занят.'),
+                message_to_response,
                 status=status.HTTP_400_BAD_REQUEST
             )
-        pincode = generate_confirmation_code(user, silent=False)
+        user.confirmation_code = ''.join(random.choices(
+            settings.PINCODE_CHARS,
+            k=settings.PINCODE_LENGTH
+        ))
+        user.save()
         send_mail(
             'Confirmation Code for Yamdb',
-            f'Your confirmation code is: {pincode}',
+            f'Your confirmation code is: {user.confirmation_code}',
             settings.DEFAULT_FROM_EMAIL,
             [user.email],
             fail_silently=True,
@@ -71,14 +74,16 @@ class TokenView(generics.CreateAPIView):
         username = serializer.validated_data.get('username')
         confirmation_code = serializer.validated_data.get('confirmation_code')
         user = generics.get_object_or_404(User, username=username)
-        if check_confirmation_code(user, confirmation_code):
+        if user.confirmation_code == confirmation_code:
             return Response(
                 dict(token=str(AccessToken.for_user(user))),
                 status=status.HTTP_200_OK
             )
-        generate_confirmation_code(user, silent=True)
+        user.confirmation_code = None
+        user.save()
         return Response(
-            dict(confirmation_code='invalid confirmation_code'),
+            dict(confirmation_code='Неверный confirmation_code.'
+                                   ' Получите новый'),
             status=status.HTTP_400_BAD_REQUEST
         )
 
