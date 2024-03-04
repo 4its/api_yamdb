@@ -20,7 +20,7 @@ class BaseGroup(models.Model):
     class Meta:
         abstract = True
         ordering = ('name',)
-        default_related_name = '%(class)s' + 's'
+        default_related_name = '%(class)ss'
 
     def __str__(self):
         return self.name[:settings.OUTPUT_LENGTH]
@@ -40,7 +40,7 @@ class BasePublication(models.Model):
     class Meta:
         abstract = True
         ordering = ('pub_date',)
-        default_related_name = '%(class)s' + 's'
+        default_related_name = '%(class)ss'
 
     def __str__(self):
         return self.text[:settings.OUTPUT_LENGTH]
