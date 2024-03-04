@@ -28,7 +28,8 @@ class BaseGroup(models.Model):
 class BasePublication(models.Model):
     author = models.ForeignKey(
         'User',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name='%(class)s_authors',
     )
     text = models.TextField(verbose_name='Текст')
     pub_date = models.DateTimeField(
@@ -38,7 +39,7 @@ class BasePublication(models.Model):
 
     class Meta:
         abstract = True
-        ordering = ['pub_date']
+        ordering = ('pub_date',)
 
     def __str__(self):
         return self.text[:settings.OUTPUT_LENGTH]
@@ -112,7 +113,7 @@ class User(AbstractUser):
 class Category(BaseGroup):
     """Модель для категорий."""
 
-    class Meta:
+    class Meta(BaseGroup.Meta):
         verbose_name = 'Категория'
         verbose_name_plural = 'категории'
         default_related_name = 'categories'
@@ -121,7 +122,7 @@ class Category(BaseGroup):
 class Genre(BaseGroup):
     """Модель для жанра."""
 
-    class Meta:
+    class Meta(BaseGroup.Meta):
         verbose_name = 'Жанр'
         verbose_name_plural = 'жанры'
         default_related_name = 'genres'
@@ -164,8 +165,7 @@ class Review(BasePublication):
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
-        related_name='reviews',
-        verbose_name='Обзор'
+        verbose_name='Обзор',
     )
     score = models.SmallIntegerField(
         verbose_name='Оценка',
@@ -181,7 +181,7 @@ class Review(BasePublication):
         ),
     )
 
-    class Meta:
+    class Meta(BasePublication.Meta):
         verbose_name = 'Отзыв'
         verbose_name_plural = 'отзывы'
         default_related_name = 'reviews'
@@ -191,7 +191,6 @@ class Review(BasePublication):
                 name='unique_review_for_user'
             ),
         )
-        ordering = ('title',)
 
 
 class Comment(BasePublication):
@@ -200,8 +199,7 @@ class Comment(BasePublication):
         on_delete=models.CASCADE,
     )
 
-    class Meta:
+    class Meta(BasePublication.Meta):
         verbose_name = 'Комментарий'
         verbose_name_plural = 'комментарий'
         default_related_name = 'comments'
-        ordering = ('pub_date',)

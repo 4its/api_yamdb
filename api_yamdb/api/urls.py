@@ -5,7 +5,6 @@ from .views import (CategoriesViewSet, CommentViewSet, GenresViewSet,
                     ReviewsViewSet, TitleViewSet, TokenView, UserMeView,
                     UserSignupView, UserViewSet)
 
-
 router_v1 = SimpleRouter()
 router_v1.register(r'titles', TitleViewSet, basename='titles')
 router_v1.register(r'categories', CategoriesViewSet, basename='categories')
@@ -17,7 +16,7 @@ router_v1.register(
     basename='reviews'
 )
 router_v1.register(
-    'titles/(?P<title_id>\\d+)/reviews/(?P<review_id>\\d+)/comments',
+    r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
     CommentViewSet,
     basename='comments'
 )

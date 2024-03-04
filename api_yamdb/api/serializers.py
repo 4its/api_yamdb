@@ -25,6 +25,7 @@ class TokenSerializer(serializers.Serializer):
         required=True,
     )
     confirmation_code = serializers.CharField(
+        max_length=settings.PINCODE_LENGTH,
         required=True,
     )
 
@@ -36,6 +37,13 @@ class UserSerializer(serializers.ModelSerializer):
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role',
         )
+
+    def validate_username(self, username):
+        try:
+            validate_username(username)
+        except ValidationError as error:
+            raise serializers.ValidationError(str(error))
+        return username
 
 
 class UsersProfileSerializer(UserSerializer):
@@ -108,14 +116,15 @@ class ReviewsSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         request = self.context['request']
-        if request.method == 'POST':
-            if Review.objects.filter(
-                title=self.context['view'].kwargs.get('title_id'),
-                author=request.user
-            ).exists():
-                raise ValidationError(
-                    'Вы уже оставили отзыв на это произведение'
-                )
+        if request.method != 'POST':
+            return data
+        if Review.objects.filter(
+            title=self.context['view'].kwargs.get('title_id'),
+            author=request.user
+        ).exists():
+            raise ValidationError(
+                'Вы уже оставили отзыв на это произведение'
+            )
         return data
 
 
