@@ -31,6 +31,7 @@ class TokenSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    # TODO: Не хватает валидации ника.
 
     class Meta:
         model = User

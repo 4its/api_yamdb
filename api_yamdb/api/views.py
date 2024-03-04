@@ -4,10 +4,8 @@ from django.db import IntegrityError
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (
-    filters, generics,
-    mixins, permissions,
-    status, views,
-    viewsets
+    filters, generics, mixins, permissions,
+    status, views, viewsets
 )
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -82,6 +80,7 @@ class TokenView(generics.CreateAPIView):
                 dict(token=str(AccessToken.for_user(user))),
                 status=status.HTTP_200_OK
             )
+        generate_confirmation_code(user, silent=True)
         return Response(
             dict(confirmation_code='invalid confirmation_code'),
             status=status.HTTP_400_BAD_REQUEST
@@ -90,12 +89,12 @@ class TokenView(generics.CreateAPIView):
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = (permissions.IsAuthenticated, AdminOnly,)
     http_method_names = ('get', 'post', 'patch', 'delete')
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
     lookup_field = 'username'
-    permission_classes = (permissions.IsAuthenticated, AdminOnly,)
-    serializer_class = UserSerializer
     pagination_class = PageNumberPagination
 
 
