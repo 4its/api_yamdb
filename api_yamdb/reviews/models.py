@@ -29,7 +29,7 @@ class BasePublication(models.Model):
     author = models.ForeignKey(
         'User',
         on_delete=models.CASCADE,
-        # related_name='publications_authors',     # TODO: Не хватает related_name
+        related_name='%(class)s_authors',
     )
     text = models.TextField(verbose_name='Текст')
     pub_date = models.DateTimeField(
@@ -166,7 +166,6 @@ class Review(BasePublication):
         Title,
         on_delete=models.CASCADE,
         verbose_name='Обзор',
-        related_name='reviews',
     )
     score = models.SmallIntegerField(
         verbose_name='Оценка',
@@ -185,6 +184,7 @@ class Review(BasePublication):
     class Meta(BasePublication.Meta):
         verbose_name = 'Отзыв'
         verbose_name_plural = 'отзывы'
+        default_related_name = 'reviews'
         constraints = (
             models.UniqueConstraint(
                 fields=('title', 'author'),
@@ -197,10 +197,9 @@ class Comment(BasePublication):
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
-        related_name='comments'
     )
 
     class Meta(BasePublication.Meta):
         verbose_name = 'Комментарий'
         verbose_name_plural = 'комментарий'
-        default_related_name='comments'
+        default_related_name = 'comments'
