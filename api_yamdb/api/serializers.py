@@ -37,13 +37,6 @@ class UserSerializer(serializers.ModelSerializer, ValidateUsernameMixin):
             'username', 'email', 'first_name', 'last_name', 'bio', 'role',
         )
 
-    def validate_username(self, username):
-        try:
-            validate_username(username)
-        except ValidationError as error:
-            raise serializers.ValidationError(str(error))
-        return username
-
 
 class UsersProfileSerializer(UserSerializer):
 
