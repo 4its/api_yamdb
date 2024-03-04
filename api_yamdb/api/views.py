@@ -29,9 +29,6 @@ from .serializers import (
 )
 
 
-EXCEPTION_MESSAGES = 'Изменение чужого контента запрещено!'
-
-
 class UserSignupView(views.APIView):
     permission_classes = (permissions.AllowAny,)
 
