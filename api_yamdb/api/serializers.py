@@ -46,7 +46,6 @@ class UserSerializer(serializers.ModelSerializer):
         return username
 
 
-
 class UsersProfileSerializer(UserSerializer):
 
     class Meta(UserSerializer.Meta):

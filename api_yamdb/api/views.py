@@ -9,7 +9,6 @@ from rest_framework import (
 )
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from rest_framework.serializers import ValidationError
 from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Genre, Review, Title, User
