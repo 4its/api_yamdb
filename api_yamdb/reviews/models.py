@@ -40,7 +40,7 @@ class BasePublication(models.Model):
     class Meta:
         abstract = True
         ordering = ('pub_date',)
-        default_related_name = '%(class)s'+'s'
+        default_related_name = '%(class)s' + 's'
 
     def __str__(self):
         return self.text[:settings.OUTPUT_LENGTH]
@@ -87,7 +87,7 @@ class User(AbstractUser):
     confirmation_code = models.CharField(
         verbose_name='Пинкод',
         max_length=settings.PINCODE_LENGTH,
-        default='None',
+        null=True,
     )
 
     class Meta:
