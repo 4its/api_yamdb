@@ -72,14 +72,12 @@ class TokenView(generics.CreateAPIView):
         confirmation_code = serializer.validated_data.get('confirmation_code')
         user = generics.get_object_or_404(User, username=username)
         if (user.confirmation_code == confirmation_code
-                and confirmation_code != (settings.PINCODE_DEFAULT
-                                          * settings.PINCODE_LENGTH)):
+                and confirmation_code != settings.PINCODE_DEFAULT):
             return Response(
                 dict(token=str(AccessToken.for_user(user))),
                 status=status.HTTP_200_OK
             )
-        user.confirmation_code = (settings.PINCODE_DEFAULT
-                                  * settings.PINCODE_LENGTH)
+        user.confirmation_code = settings.PINCODE_DEFAULT
         user.save()
         return Response(
             dict(confirmation_code='Неверный confirmation_code.'
