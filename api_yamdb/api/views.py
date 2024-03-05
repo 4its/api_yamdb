@@ -42,9 +42,9 @@ class UserSignupView(views.APIView):
             )
         except IntegrityError:
             return Response(
-                (dict(username=f'Имя "{username}" уже занято.')
+                (dict(username=f"Имя '{username}' уже занято.")
                  if User.objects.filter(username=username).exists()
-                 else dict(email=f'Адрес "{email}" уже занят.')),
+                 else dict(email=f"Адрес '{email}' уже занят.")),
                 status=status.HTTP_400_BAD_REQUEST
             )
         user.confirmation_code = ''.join(random.choices(
@@ -71,12 +71,13 @@ class TokenView(generics.CreateAPIView):
         username = serializer.validated_data.get('username')
         confirmation_code = serializer.validated_data.get('confirmation_code')
         user = generics.get_object_or_404(User, username=username)
-        if user.confirmation_code == confirmation_code:
+        if (user.confirmation_code == confirmation_code
+                and confirmation_code != settings.PINCODE_DEFAULT):
             return Response(
                 dict(token=str(AccessToken.for_user(user))),
                 status=status.HTTP_200_OK
             )
-        user.confirmation_code = ''
+        user.confirmation_code = settings.PINCODE_DEFAULT
         user.save()
         return Response(
             dict(confirmation_code='Неверный confirmation_code.'

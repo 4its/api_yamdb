@@ -12,6 +12,7 @@ def validate_username(username):
         )
     forbidden_chars = re.sub(settings.USERNAME_PATTERN, '', username)
     if forbidden_chars:
+        forbidden_chars = ''.join(set(forbidden_chars))
         raise ValidationError(
             f'Недопустимые символы в имени пользователя: "{forbidden_chars}"'
         )
