@@ -87,7 +87,7 @@ class User(AbstractUser):
     confirmation_code = models.CharField(
         verbose_name='Пинкод',
         max_length=settings.PINCODE_LENGTH,
-        null=True,
+        default=settings.PINCODE_DEFAULT * settings.PINCODE_LENGTH,
     )
 
     class Meta:
