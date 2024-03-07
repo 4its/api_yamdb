@@ -124,17 +124,22 @@ REST_FRAMEWORK = {
 
 # Constants block
 USERNAME_PATTERN = r'[\w.@+-]'
+FORBIDDEN_NAMES = ('me',)
 
+# Models constants
 STANDARD_FIELD_LENGTH = 150
 NAME_FIELD_LENGTH = 256
 SLUG_FIELD_LENGTH = 50
 EMAIL_FIELD_LENGTH = 254
 
+# Define min and max values for scores
 MINIMUM_SCORE = 1
 MAXIMUM_SCORE = 10
 
+# Name  cutter constant
 OUTPUT_LENGTH = 25
 
-PINCODE_CHARS = '1234567890'
-PINCODE_LENGTH = 6
-PINCODE_DEFAULT = '*' * PINCODE_LENGTH
+# Pincode constants
+PINCODE_LENGTH = 6  # Length of the pincode
+PINCODE_CHARS = '1234567890'    # Char that will be used for generate pincode
+PINCODE_DEFAULT = '*' * PINCODE_LENGTH  # Default value of pincode(Not acceptable)
